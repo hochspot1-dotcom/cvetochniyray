@@ -329,6 +329,39 @@ server.listen(4178, async () => {
   });
   console.log('Button cleanliness check:', buttonCleanliness);
 
+  // 7. Test Yandex Map Zoom, Drag, MultiTouch, and Placemark Setting
+  console.log('\n--- Testing Yandex Map Gestures & Placemark Setting ---');
+  await page.evaluate(() => {
+    if (window.openAddressModal) window.openAddressModal();
+  });
+  await new Promise(r => setTimeout(r, 1500));
+
+  const mapBehaviors = await page.evaluate(() => {
+    const map = window.gorlovkaYandexMapInstance;
+    if (!map) return { error: 'Map not initialized' };
+    return {
+      isDrag: map.behaviors.isEnabled('drag'),
+      isScrollZoom: map.behaviors.isEnabled('scrollZoom'),
+      isMultiTouch: map.behaviors.isEnabled('multiTouch'),
+      isDblClick: map.behaviors.isEnabled('dblClickZoom')
+    };
+  });
+
+  // Real DOM click on map to place placemark
+  await page.click('#yandex-delivery-map', { offset: { x: 120, y: 120 } });
+  await new Promise(r => setTimeout(r, 600));
+
+  const placemarkState = await page.evaluate(() => {
+    const placemark = window.gorlovkaClientPlacemark;
+    const clickedCoords = placemark ? placemark.geometry.getCoordinates() : null;
+    const addrInputVal = document.getElementById('map-address-input')?.value;
+    const btnText = document.getElementById('btn-apply-text')?.textContent.trim();
+    return { clickedCoords, addrInputVal, btnText };
+  });
+
+  console.log('Map gestures verification:', mapBehaviors);
+  console.log('Map real click & placemark placement verification:', placemarkState);
+
   await page.screenshot({ path: 'tests/mobile_verified.png' });
 
   console.log('\n=== All Issues Logged ===');

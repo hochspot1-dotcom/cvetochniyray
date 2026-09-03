@@ -52,8 +52,8 @@ let indexHtml = `<!DOCTYPE html>
     <title>Цветочный Рай — Доставка цветов и подарков в Горловке</title>
     <link rel="preload" as="image" href="./hero.png" fetchpriority="high" />
     <!-- Yandex Maps API & Native Geocoding -->
-    <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU" type="text/javascript" defer></script>
-    <script type="text/javascript" defer>
+    <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU&apikey=1329f98b-8d18-4ba7-bcdf-b260ce11741d&suggest_apikey=dd76a4ab-ce03-4cfd-8660-10b9d8df6419" type="text/javascript"></script>
+    <script type="text/javascript">
 ${gorlovkaZonesScript}
     </script>
     <link rel="stylesheet" href="./src/style.css" />
@@ -2344,52 +2344,31 @@ ${allCardsHtml}
             .trim();
           if (!cleanVal) return;
 
-          var photonUrl = 'https://photon.komoot.io/api/?q=' + encodeURIComponent('Горловка ' + cleanVal) + '&lat=48.3032&lon=38.0245&limit=10';
-
-          fetch(photonUrl, controller ? { signal: controller.signal } : {})
-            .then(function(res) { return res.json(); })
-            .then(function(data) {
-              if (!data || !data.features || data.features.length === 0) return;
-
-              var photonList = [];
-              data.features.forEach(function(feat) {
-                var geom = feat.geometry || {};
-                var coords = geom.coordinates;
-                if (!coords || coords.length < 2) return;
-                var lat = coords[1];
-                var lon = coords[0];
-                if (lat < 48.20 || lat > 48.45 || lon < 37.85 || lon > 38.25) return;
-
-                var p = feat.properties || {};
-                var streetName = p.street || p.name || '';
-                if (!streetName) return;
-
-                streetName = streetName
-                  .replace(/^вулиця\\s+/i, 'ул. ')
-                  .replace(/^проспект\\s+/i, 'пр. ')
-                  .replace(/^бульвар\\s+/i, 'б-р ')
-                  .replace(/^провулок\\s+/i, 'пер. ');
-
-                var houseNum = p.housenumber || '';
-                var title = streetName + (houseNum ? (', ' + houseNum) : '');
-                var zone = getZoneForCoords([lat, lon]);
-
-                photonList.push({
+          // Yandex Maps Suggest & Geocode API (Authorized with user API key)
+          if (typeof ymaps !== 'undefined' && ymaps.suggest) {
+            ymaps.suggest('Горловка, ' + cleanVal, { results: 8 }).then(function(items) {
+              if (!items || items.length === 0) return;
+              var yList = items.map(function(it) {
+                var rawName = it.displayName || it.value || '';
+                var title = it.value ? it.value.replace(/г\\.?\\s*Горловка,?\\s*/gi, '').replace(/Горловка,?\\s*/gi, '').trim() : rawName;
+                var full = it.value || ('Горловка, ' + title);
+                var localZone = findLocalStreetMatches(title);
+                var zone = localZone.length > 0 ? localZone[0] : { dist: 'ЦГР', price: 250, time: '30 мин' };
+                return {
                   title: title,
-                  full: 'Горловка, ' + title,
+                  full: full,
                   dist: zone.dist,
                   price: zone.price,
                   time: zone.time,
-                  coords: [lat, lon],
+                  coords: zone.coords,
                   meta: zone.dist + ' (' + zone.price + ' ₽, ' + zone.time + ')'
-                });
+                };
               });
 
               var combined = local.slice();
               var seen = {};
               combined.forEach(function(c) { seen[c.title.toLowerCase()] = true; });
-
-              photonList.forEach(function(item) {
+              yList.forEach(function(item) {
                 var key = item.title.toLowerCase();
                 if (!seen[key]) {
                   seen[key] = true;
@@ -2400,10 +2379,43 @@ ${allCardsHtml}
               if (combined.length > 0) {
                 renderSuggestions(combined.slice(0, 10));
               }
-            })
-            .catch(function(err) {
-              if (err && err.name === 'AbortError') return;
-            });
+            }).catch(function() {});
+          } else if (typeof ymaps !== 'undefined' && ymaps.geocode) {
+            ymaps.geocode('Горловка, ' + cleanVal, { results: 8 }).then(function(res) {
+              if (!res || !res.geoObjects) return;
+              var yList = [];
+              res.geoObjects.each(function(obj) {
+                var coords = obj.geometry.getCoordinates();
+                var full = obj.getAddressLine() || '';
+                var title = obj.properties.get('name') || full;
+                var zone = getZoneForCoords(coords);
+                yList.push({
+                  title: title,
+                  full: full,
+                  dist: zone.dist,
+                  price: zone.price,
+                  time: zone.time,
+                  coords: coords,
+                  meta: zone.dist + ' (' + zone.price + ' ₽, ' + zone.time + ')'
+                });
+              });
+
+              var combined = local.slice();
+              var seen = {};
+              combined.forEach(function(c) { seen[c.title.toLowerCase()] = true; });
+              yList.forEach(function(item) {
+                var key = item.title.toLowerCase();
+                if (!seen[key]) {
+                  seen[key] = true;
+                  combined.push(item);
+                }
+              });
+
+              if (combined.length > 0) {
+                renderSuggestions(combined.slice(0, 10));
+              }
+            }).catch(function() {});
+          }
         }
 
 
@@ -2545,8 +2557,13 @@ ${allCardsHtml}
               var myMap = new ymaps.Map('yandex-delivery-map', {
                 center: gorlovkaCenter,
                 zoom: 13,
-                controls: ['zoomControl', 'geolocationControl']
+                controls: ['zoomControl', 'geolocationControl', 'typeSelector', 'fullscreenControl'],
+                behaviors: ['default', 'scrollZoom', 'drag', 'multiTouch', 'dblClickZoom', 'rightMouseButtonMagnifier']
+              }, {
+                searchControlProvider: 'yandex#search'
               });
+
+              myMap.behaviors.enable(['drag', 'scrollZoom', 'multiTouch', 'dblClickZoom', 'rightMouseButtonMagnifier']);
 
               var zonesData = window.GORLOVKA_DELIVERY_ZONES || [];
               var zonesCollection = new ymaps.GeoObjectCollection();
@@ -2635,29 +2652,28 @@ ${allCardsHtml}
 
               function reverseGeocodeCoords(coords) {
                 deliveryInfo.isAddressChosen = true;
-                var nearest = findNearestStreet(coords);
-                var immediateStreet = nearest ? nearest.street : (deliveryInfo.district || 'Центр');
-                applyCleanAddress('Горловка, ' + immediateStreet, immediateStreet);
-
-                var photonUrl = 'https://photon.komoot.io/reverse?lat=' + coords[0] + '&lon=' + coords[1];
-                fetch(photonUrl)
-                  .then(function(r) { return r.json(); })
-                  .then(function(data) {
-                    if (data && data.features && data.features[0]) {
-                      var p = data.features[0].properties;
-                      var st = p.street || p.name || (nearest ? nearest.street : '');
-                      var hn = p.housenumber || '';
-                      if (st) {
-                        st = st.replace(/^вулиця\\s+/i, 'ул. ')
-                               .replace(/^проспект\\s+/i, 'пр. ')
-                               .replace(/^бульвар\\s+/i, 'б-р ')
-                               .replace(/^провулок\\s+/i, 'пер. ');
-                        var fullShort = st + (hn ? (', ' + hn) : '');
-                        applyCleanAddress('Горловка, ' + fullShort, fullShort);
-                      }
+                if (typeof ymaps !== 'undefined' && ymaps.geocode) {
+                  ymaps.geocode(coords, { results: 1 }).then(function(res) {
+                    var first = res && res.geoObjects && res.geoObjects.get(0);
+                    if (first) {
+                      var full = first.getAddressLine() || '';
+                      var shortName = first.properties.get('name') || full;
+                      applyCleanAddress(full, shortName);
+                    } else {
+                      var nearest = findNearestStreet(coords);
+                      var immStreet = nearest ? nearest.street : (deliveryInfo.district || 'Центр');
+                      applyCleanAddress('Горловка, ' + immStreet, immStreet);
                     }
-                  })
-                  .catch(function() {});
+                  }).catch(function() {
+                    var nearest = findNearestStreet(coords);
+                    var immStreet = nearest ? nearest.street : (deliveryInfo.district || 'Центр');
+                    applyCleanAddress('Горловка, ' + immStreet, immStreet);
+                  });
+                } else {
+                  var nearest = findNearestStreet(coords);
+                  var immStreet = nearest ? nearest.street : (deliveryInfo.district || 'Центр');
+                  applyCleanAddress('Горловка, ' + immStreet, immStreet);
+                }
               }
 
               function setDeliveryLocationAndAddress(coords) {
@@ -2667,32 +2683,18 @@ ${allCardsHtml}
                 reverseGeocodeCoords(coords);
               }
 
-              // Add polygon delivery zones
+              // Add polygon delivery zones with transparent interactivity so map dragging and gestures work everywhere
               zonesData.forEach(function(zone) {
                 var polygon = new ymaps.Polygon([zone.coords], {
                   hintContent: '<div style="padding: 4px 8px; font-family: sans-serif; font-size: 13px;"><strong>' + zone.name + '</strong><br/>Доставка: <strong style="color: #1B4D36;">' + zone.price + ' ₽</strong> (' + zone.time + ' мин)</div>'
                 }, {
                   fillColor: zone.fillColor,
-                  fillOpacity: 0.40,
+                  fillOpacity: 0.35,
                   strokeColor: zone.strokeColor,
-                  strokeOpacity: 0.90,
+                  strokeOpacity: 0.85,
                   strokeWidth: 2,
-                  cursor: 'pointer'
-                });
-
-                polygon.events.add('mouseenter', function() {
-                  polygon.options.set('fillOpacity', 0.65);
-                  polygon.options.set('strokeWidth', 3);
-                });
-
-                polygon.events.add('mouseleave', function() {
-                  polygon.options.set('fillOpacity', 0.40);
-                  polygon.options.set('strokeWidth', 2);
-                });
-
-                polygon.events.add('click', function(e) {
-                  var coords = e.get('coords');
-                  setDeliveryLocationAndAddress(coords);
+                  cursor: 'pointer',
+                  interactivityModel: 'default#transparent'
                 });
 
                 zonesCollection.add(polygon);
@@ -2732,36 +2734,12 @@ ${allCardsHtml}
                 }
 
                 if (typeof ymaps !== 'undefined' && ymaps.geocode) {
-                  ymaps.geocode(fullQuery, { boundedBy: gorlovkaBounds, results: 1 }).then(function(res) {
+                  ymaps.geocode(fullQuery, { results: 1 }).then(function(res) {
                     var first = res && res.geoObjects && res.geoObjects.get(0);
                     if (first) {
                       onFoundCoords(first.geometry.getCoordinates(), first.getAddressLine(), first.properties.get('name'));
-                    } else {
-                      fetch('https://photon.komoot.io/api/?q=' + encodeURIComponent('Горловка ' + addrText) + '&lat=48.3032&lon=38.0245&limit=1')
-                        .then(function(r) { return r.json(); })
-                        .then(function(data) {
-                          if (data && data.features && data.features[0]) {
-                            var f = data.features[0];
-                            var c = f.geometry ? f.geometry.coordinates : null;
-                            if (c) {
-                              onFoundCoords([c[1], c[0]], 'Горловка, ' + (f.properties.name || addrText), f.properties.name || addrText);
-                            }
-                          }
-                        }).catch(function() {});
                     }
-                  }).catch(function() {
-                    fetch('https://photon.komoot.io/api/?q=' + encodeURIComponent('Горловка ' + addrText) + '&lat=48.3032&lon=38.0245&limit=1')
-                      .then(function(r) { return r.json(); })
-                      .then(function(data) {
-                        if (data && data.features && data.features[0]) {
-                          var f = data.features[0];
-                          var c = f.geometry ? f.geometry.coordinates : null;
-                          if (c) {
-                            onFoundCoords([c[1], c[0]], 'Горловка, ' + (f.properties.name || addrText), f.properties.name || addrText);
-                          }
-                        }
-                      }).catch(function() {});
-                  });
+                  }).catch(function() {});
                 }
               };
             });
@@ -3841,7 +3819,8 @@ ${allCardsHtml}
 
           if (activeBtn) {
             try {
-              activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+              var targetLeft = activeBtn.offsetLeft - (pageRibbonTrack.clientWidth / 2) + (activeBtn.clientWidth / 2);
+              pageRibbonTrack.scrollTo({ left: Math.max(0, targetLeft), behavior: 'smooth' });
             } catch(e) {}
           }
 
@@ -3858,37 +3837,6 @@ ${allCardsHtml}
         }
 
         if (pageRibbonTrack) {
-          var ribbonTouchStartX = 0;
-          var ribbonTouchStartY = 0;
-          var ribbonIsScrolling = false;
-
-          pageRibbonTrack.addEventListener('touchstart', function(e) {
-            if (e.touches && e.touches[0]) {
-              ribbonTouchStartX = e.touches[0].clientX;
-              ribbonTouchStartY = e.touches[0].clientY;
-              ribbonIsScrolling = false;
-            }
-          }, { passive: true });
-
-          pageRibbonTrack.addEventListener('touchmove', function(e) {
-            if (e.touches && e.touches[0]) {
-              var dx = Math.abs(e.touches[0].clientX - ribbonTouchStartX);
-              var dy = Math.abs(e.touches[0].clientY - ribbonTouchStartY);
-              if (dx > 8 || dy > 8) {
-                ribbonIsScrolling = true;
-              }
-            }
-          }, { passive: true });
-
-          pageRibbonTrack.addEventListener('touchend', function(e) {
-            if (ribbonIsScrolling) return;
-            var btn = e.target.closest('.ribbon-btn');
-            if (!btn) return;
-            e.preventDefault();
-            var cat = btn.getAttribute('data-cat') || 'all';
-            navigateToView('catalog', cat, pageSearchInput ? pageSearchInput.value : '');
-          });
-
           pageRibbonTrack.addEventListener('click', function(e) {
             var btn = e.target.closest('.ribbon-btn');
             if (!btn) return;
@@ -4217,41 +4165,6 @@ ${allCardsHtml}
           btnFlyoutAll.addEventListener('click', function(e) {
             e.preventDefault();
             navigateToView('catalog', 'all');
-          });
-        }
-
-        var hubTrackEl = document.getElementById('category-hub-track');
-        if (hubTrackEl) {
-          var hubTouchStartX = 0;
-          var hubTouchStartY = 0;
-          var hubIsScrolling = false;
-
-          hubTrackEl.addEventListener('touchstart', function(e) {
-            if (e.touches && e.touches[0]) {
-              hubTouchStartX = e.touches[0].clientX;
-              hubTouchStartY = e.touches[0].clientY;
-              hubIsScrolling = false;
-            }
-          }, { passive: true });
-
-          hubTrackEl.addEventListener('touchmove', function(e) {
-            if (e.touches && e.touches[0]) {
-              var dx = Math.abs(e.touches[0].clientX - hubTouchStartX);
-              var dy = Math.abs(e.touches[0].clientY - hubTouchStartY);
-              if (dx > 8 || dy > 8) {
-                hubIsScrolling = true;
-              }
-            }
-          }, { passive: true });
-
-          hubTrackEl.addEventListener('touchend', function(e) {
-            if (hubIsScrolling) return;
-            var target = e.target.closest('.hub-card__header, .hub-cell, .hub-cell__more-btn');
-            if (target) {
-              e.preventDefault();
-              var cat = target.getAttribute('data-cat') || 'Цветы';
-              navigateToView('catalog', cat);
-            }
           });
         }
 
