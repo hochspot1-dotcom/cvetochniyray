@@ -1609,11 +1609,39 @@ ${allCardsHtml}
         var btnFavToCatalog = document.getElementById('btn-fav-to-catalog');
         var btnFavAddAll = document.getElementById('btn-fav-add-all');
 
+        function lockBodyScroll(locked) {
+          if (locked) {
+            document.body.classList.add('scroll-locked');
+            document.documentElement.style.overflow = 'hidden';
+          } else {
+            setTimeout(function() {
+              var pModal = document.getElementById('product-modal-wrap');
+              var sOverlay = document.getElementById('header-search-overlay');
+              var cDrawer = document.getElementById('cart-drawer-wrap');
+              var fDrawer = document.getElementById('fav-drawer-wrap');
+              var aModal = document.getElementById('address-modal-wrap');
+
+              var isProductModalOpen = pModal && pModal.style.display === 'flex';
+              var isSearchOpen = sOverlay && sOverlay.classList.contains('active');
+              var isCartOpen = cDrawer && cDrawer.classList.contains('is-open');
+              var isFavOpen = fDrawer && fDrawer.classList.contains('is-open');
+              var isAddressOpen = aModal && aModal.classList.contains('is-open');
+
+              if (!isProductModalOpen && !isSearchOpen && !isCartOpen && !isFavOpen && !isAddressOpen) {
+                document.body.classList.remove('scroll-locked');
+                document.documentElement.style.overflow = '';
+                document.body.style.overflow = '';
+              }
+            }, 30);
+          }
+        }
+
         function openFavoritesDrawer() {
           if (favDrawerWrap && favDrawer) {
             favDrawerWrap.classList.add('is-open');
             favDrawer.classList.add('is-open');
             updateFavoritesUI();
+            lockBodyScroll(true);
           }
         }
 
@@ -1621,6 +1649,7 @@ ${allCardsHtml}
           if (favDrawerWrap && favDrawer) {
             favDrawerWrap.classList.remove('is-open');
             favDrawer.classList.remove('is-open');
+            lockBodyScroll(false);
           }
         }
 
@@ -1707,14 +1736,14 @@ ${allCardsHtml}
 
           if (productModalWrap) {
             productModalWrap.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
+            lockBodyScroll(true);
           }
         }
 
         function closeProductModal() {
           if (productModalWrap) {
             productModalWrap.style.display = 'none';
-            document.body.style.overflow = '';
+            lockBodyScroll(false);
           }
         }
 
@@ -1861,6 +1890,7 @@ ${allCardsHtml}
           if (mapAddressInput) mapAddressInput.value = deliveryInfo.address;
           updateModalCalcView();
           initYandexMapGorlovka();
+          lockBodyScroll(true);
           if (window.gorlovkaYandexMapInstance) {
             setTimeout(function() {
               window.gorlovkaYandexMapInstance.container.fitToViewport();
@@ -1871,6 +1901,7 @@ ${allCardsHtml}
         function closeAddressModal() {
           if (!addressModal) return;
           addressModal.classList.remove('is-open');
+          lockBodyScroll(false);
         }
 
         if (btnAddressHeader) btnAddressHeader.addEventListener('click', openAddressModal);
@@ -2592,11 +2623,13 @@ ${allCardsHtml}
           if (!cartDrawerWrap) return;
           cartDrawerWrap.classList.add('is-open');
           updateCartUI();
+          lockBodyScroll(true);
         }
 
         function closeCart() {
           if (!cartDrawerWrap) return;
           cartDrawerWrap.classList.remove('is-open');
+          lockBodyScroll(false);
         }
 
         if (btnHeaderCart) btnHeaderCart.addEventListener('click', openCart);
@@ -2780,21 +2813,30 @@ ${allCardsHtml}
           });
         }
 
-        function formatPhoneValue(value) {
-          if (!value) return '';
-          var raw = value.replace(/\D/g, '');
-          if (!raw) return '';
-          if (raw.length === 1 && (raw === '7' || raw === '8')) return '+7 (';
-          var digits = (raw[0] === '7' || raw[0] === '8') ? raw.slice(1) : raw;
-          var res = '+7 (';
-          if (digits.length > 0) res += digits.slice(0, 3);
-          if (digits.length > 3) res += ') ' + digits.slice(3, 6);
-          else if (digits.length === 3) res += ') ';
-          if (digits.length > 6) res += '-' + digits.slice(6, 8);
-          else if (digits.length === 6) res += '-';
-          if (digits.length > 8) res += '-' + digits.slice(8, 10);
-          else if (digits.length === 8) res += '-';
-          return res;
+        function formatPhoneValue(inputVal) {
+          var inputNumbersValue = (inputVal || '').replace(/[^0-9]/g, '');
+          if (!inputNumbersValue) return '';
+
+          var firstChar = inputNumbersValue[0];
+          var digits = inputNumbersValue;
+          if (firstChar === '7' || firstChar === '8') {
+            digits = inputNumbersValue.substring(1);
+          }
+
+          var formatted = '+7';
+          if (digits.length > 0) {
+            formatted += ' (' + digits.substring(0, 3);
+          }
+          if (digits.length >= 3) {
+            formatted += ') ' + digits.substring(3, 6);
+          }
+          if (digits.length >= 6) {
+            formatted += '-' + digits.substring(6, 8);
+          }
+          if (digits.length >= 8) {
+            formatted += '-' + digits.substring(8, 10);
+          }
+          return formatted;
         }
 
         function setupPhoneInputMask(inputEl) {
@@ -2805,33 +2847,7 @@ ${allCardsHtml}
           });
 
           inputEl.addEventListener('keydown', function(e) {
-            if (e.key === 'Backspace') {
-              var val = inputEl.value;
-              var digits = val.replace(/\D/g, '');
-              if (digits.length <= 1) {
-                inputEl.value = '';
-                return;
-              }
-              var pos = inputEl.selectionStart;
-              if (pos > 0 && inputEl.selectionEnd === pos) {
-                var charBefore = val[pos - 1];
-                if (charBefore === ' ' || charBefore === '-' || charBefore === ')' || charBefore === '(') {
-                  e.preventDefault();
-                  var clean = (digits[0] === '7' || digits[0] === '8') ? digits.slice(1, -1) : digits.slice(0, -1);
-                  inputEl.value = formatPhoneValue(clean);
-                }
-              }
-            }
-          });
-
-          inputEl.addEventListener('focus', function() {
-            if (!inputEl.value) {
-              inputEl.value = '+7 (';
-            }
-          });
-
-          inputEl.addEventListener('blur', function() {
-            if (inputEl.value === '+7 (' || inputEl.value === '+7' || inputEl.value === '+') {
+            if (e.key === 'Backspace' && inputEl.value.replace(/[^0-9]/g, '').length <= 1) {
               inputEl.value = '';
             }
           });
@@ -3077,6 +3093,7 @@ ${allCardsHtml}
         function openSearchOverlay() {
           if (!searchOverlay) return;
           searchOverlay.classList.add('active');
+          lockBodyScroll(true);
           if (mainSearchInput) {
             setTimeout(function() { mainSearchInput.focus(); }, 60);
           }
@@ -3085,6 +3102,7 @@ ${allCardsHtml}
         function closeSearchOverlay() {
           if (searchOverlay) searchOverlay.classList.remove('active');
           hideSearchResults();
+          lockBodyScroll(false);
         }
 
         function handleLiveSearch(query) {

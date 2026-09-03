@@ -15,10 +15,10 @@
   --color-border-card: #C5D8CD;
   --color-border-hover: #2D6A4F;
 
-  --shadow-xs: 0 2px 6px rgba(45, 106, 79, 0.06);
-  --shadow-sm: 0 4px 12px rgba(45, 106, 79, 0.08);
-  --shadow-md: 0 8px 20px rgba(45, 106, 79, 0.12);
-  --shadow-emerald: 0 4px 14px rgba(45, 106, 79, 0.28);
+  --shadow-xs: 0 2px 8px rgba(45, 106, 79, 0.05), 0 1px 2px rgba(0, 0, 0, 0.02);
+  --shadow-sm: 0 4px 16px rgba(45, 106, 79, 0.08), 0 1px 3px rgba(0, 0, 0, 0.03);
+  --shadow-md: 0 10px 30px rgba(45, 106, 79, 0.10), 0 2px 6px rgba(0, 0, 0, 0.04);
+  --shadow-emerald: 0 6px 20px rgba(45, 106, 79, 0.22), 0 2px 8px rgba(45, 106, 79, 0.15);
 
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -39,6 +39,7 @@
 }
 
 html {
+  height: 100%;
   overflow-x: hidden;
   width: 100%;
   max-width: 100%;
@@ -48,13 +49,14 @@ html {
 }
 
 /* ===================================================
-   LUXURY BOTANICAL CUSTOM SCROLLBAR SYSTEM
+   GLOBAL TAP HIGHLIGHT REMOVAL & LUXURY DEFAULTS
    =================================================== */
-/* Standard for modern Firefox */
-* {
+*, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  -webkit-tap-highlight-color: transparent !important;
+  tap-highlight-color: transparent !important;
   scrollbar-width: thin;
   scrollbar-color: #2D6A4F rgba(223, 233, 226, 0.45);
 }
@@ -103,16 +105,31 @@ body {
   -webkit-font-smoothing: antialiased;
   position: relative;
   min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
   touch-action: manipulation;
 }
 
+body.scroll-locked {
+  overflow: hidden !important;
+  touch-action: none !important;
+}
+
+.main-content,
+.checkout-page-section {
+  flex: 1 0 auto;
+  width: 100%;
+}
+
 a {
   color: inherit;
   text-decoration: none;
   transition: opacity 0.15s ease;
+  -webkit-tap-highlight-color: transparent !important;
 }
 
 a:hover {
@@ -125,6 +142,27 @@ button {
   border: none;
   background: none;
   transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+/* ===================================================
+   TACTILE MOBILE TAP MICRO-ANIMATIONS (:active)
+   =================================================== */
+button:active,
+.btn:active,
+.product-card:active,
+.bestseller-card:active,
+.sort-chip:active,
+.co-segment-btn:active,
+.mobile-nav-item:active,
+.cart-qty-btn:active,
+.card-fav-btn:active,
+.btn-hero-action:active,
+.hero-btn:active,
+.hub-card:active,
+.catalog-item-btn:active {
+  transform: scale(0.965) !important;
+  transition: transform 0.1s cubic-bezier(0.2, 0.9, 0.3, 1) !important;
 }
 
 .container {
@@ -1682,9 +1720,9 @@ button {
 .bestseller-card {
   background: #FFFFFF;
   border-radius: 20px;
-  padding: 10px 10px 14px 10px;
-  border: 1px solid rgba(220, 235, 226, 0.75);
-  box-shadow: 0 4px 14px rgba(20, 36, 26, 0.04);
+  padding: 8px 8px 12px 8px;
+  border: 1px solid rgba(220, 235, 226, 0.85);
+  box-shadow: 0 4px 18px rgba(20, 36, 26, 0.05), 0 1px 3px rgba(0, 0, 0, 0.02);
   display: flex;
   flex-direction: column;
   cursor: pointer;
@@ -1698,13 +1736,13 @@ button {
 .product-card:hover,
 .bestseller-card:hover {
   transform: scale(1.028);
-  box-shadow: 0 14px 34px rgba(20, 36, 26, 0.11);
+  box-shadow: 0 14px 34px rgba(20, 36, 26, 0.11), 0 2px 6px rgba(0, 0, 0, 0.04);
 }
 
 .card-img-box {
   position: relative;
   width: 100%;
-  aspect-ratio: 1 / 1.04;
+  aspect-ratio: 1 / 1.18;
   border-radius: 16px;
   overflow: hidden;
   background: #F2F7F4;
@@ -1738,7 +1776,14 @@ button {
   flex-direction: column;
   flex: 1;
   justify-content: space-between;
-  padding-top: 10px;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  border-radius: 14px;
+  padding: 10px 12px 10px;
+  margin-top: 8px;
+  box-shadow: 0 3px 12px rgba(20, 36, 26, 0.04);
 }
 
 .card-name {
@@ -2370,6 +2415,25 @@ button {
   margin: 0;
 }
 
+/* ===================================================
+   Scroll containment to prevent background scroll leakage
+   =================================================== */
+.product-modal-wrap,
+.product-modal-container,
+.modal-right-col,
+.header-search-overlay,
+.header-search-modal,
+.header-search-results,
+.cart-drawer-wrap,
+.cart-drawer,
+.cart-body,
+.fav-body,
+.address-modal-wrap,
+.address-modal,
+.delivery-modal-body-vertical {
+  overscroll-behavior: contain !important;
+}
+
 /* Modal Mobile Responsive */
 @media (max-width: 768px) {
   .product-modal-wrap {
@@ -2713,7 +2777,8 @@ button {
   padding: 68px 0 54px 0;
   overflow: hidden;
   border-top: 1px solid rgba(255, 255, 255, 0.12);
-  margin-top: 40px;
+  margin-top: auto;
+  width: 100%;
 }
 
 .footer-container {
@@ -2893,7 +2958,9 @@ button {
     gap: 30px;
   }
   .footer-section {
-    padding: 40px 0 95px 0;
+    padding: 40px 0 calc(96px + env(safe-area-inset-bottom, 16px)) 0 !important;
+    margin-top: auto !important;
+    width: 100% !important;
   }
 }
 
@@ -4678,9 +4745,16 @@ button {
   }
 
   .bestseller-card {
-    flex: 0 0 162px;
-    padding: 8px;
-    border-radius: 14px;
+    flex: 0 0 168px;
+    padding: 6px 6px 8px 6px;
+    border-radius: 16px;
+  }
+
+  .bestseller-card .card-content,
+  .product-card .card-content {
+    padding: 8px 9px 8px;
+    border-radius: 12px;
+    margin-top: 6px;
   }
 
   .bestseller-card__title {
