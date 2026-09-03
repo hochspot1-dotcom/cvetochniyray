@@ -2924,30 +2924,81 @@ ${allCardsHtml}
           });
         }
 
-        // Time mode tabs
+        // Time mode tabs (ASAP vs Scheduled date/time)
         var timeModeTabs = document.getElementById('co-time-mode-tabs');
         var scheduleOptions = document.getElementById('co-schedule-options');
+        var deliveryDateInput = document.getElementById('co-delivery-date');
+
+        // Set min date to today's date in local time
+        if (deliveryDateInput) {
+          var todayStr = new Date().toISOString().split('T')[0];
+          deliveryDateInput.setAttribute('min', todayStr);
+          if (!deliveryDateInput.value) {
+            deliveryDateInput.value = todayStr;
+          }
+          deliveryDateInput.addEventListener('click', function() {
+            try {
+              if (typeof deliveryDateInput.showPicker === 'function') {
+                deliveryDateInput.showPicker();
+              }
+            } catch (err) {}
+          });
+        }
+
         if (timeModeTabs) {
           timeModeTabs.querySelectorAll('.co-segment-btn').forEach(function(btn) {
             btn.addEventListener('click', function() {
               timeModeTabs.querySelectorAll('.co-segment-btn').forEach(function(b) { b.classList.remove('active'); });
               btn.classList.add('active');
-              var mode = btn.getAttribute('data-mode');
+              var mode = btn.getAttribute('data-time-mode') || btn.getAttribute('data-mode');
               if (scheduleOptions) {
-                scheduleOptions.style.display = mode === 'schedule' ? 'grid' : 'none';
+                var isScheduled = (mode === 'scheduled' || mode === 'schedule');
+                scheduleOptions.style.display = isScheduled ? 'block' : 'none';
+                if (isScheduled && deliveryDateInput) {
+                  setTimeout(function() {
+                    try {
+                      if (typeof deliveryDateInput.showPicker === 'function') {
+                        deliveryDateInput.showPicker();
+                      }
+                    } catch (e) {}
+                  }, 80);
+                }
               }
             });
           });
         }
 
         // Payment method selection
-        var paymentGroup = document.getElementById('co-payment-group');
-        if (paymentGroup) {
-          paymentGroup.querySelectorAll('.co-pay-option').forEach(function(opt) {
+        var paymentContainer = document.getElementById('co-payment-methods') || document.getElementById('co-payment-group');
+        if (paymentContainer) {
+          var payOptions = paymentContainer.querySelectorAll('.co-pay-option');
+          payOptions.forEach(function(opt) {
             opt.addEventListener('click', function() {
-              paymentGroup.querySelectorAll('.co-pay-option').forEach(function(o) { o.classList.remove('active'); });
+              payOptions.forEach(function(o) {
+                o.classList.remove('active');
+                var radio = o.querySelector('input[type="radio"]');
+                if (radio) radio.checked = false;
+              });
               opt.classList.add('active');
-              currentPaymentMethod = opt.getAttribute('data-payment');
+              var myRadio = opt.querySelector('input[type="radio"]');
+              if (myRadio) {
+                myRadio.checked = true;
+                currentPaymentMethod = myRadio.value;
+              }
+            });
+          });
+
+          paymentContainer.querySelectorAll('input[name="co-payment"]').forEach(function(radio) {
+            radio.addEventListener('change', function() {
+              payOptions.forEach(function(o) {
+                var r = o.querySelector('input[type="radio"]');
+                if (r && r.checked) {
+                  o.classList.add('active');
+                  currentPaymentMethod = r.value;
+                } else {
+                  o.classList.remove('active');
+                }
+              });
             });
           });
         }
@@ -3281,22 +3332,58 @@ ${allCardsHtml}
         function updateHubArrowStates() {
           if (!hubTrack || !btnHubPrev || !btnHubNext) return;
           var maxScroll = hubTrack.scrollWidth - hubTrack.clientWidth;
-          btnHubPrev.style.opacity = hubTrack.scrollLeft <= 5 ? '0.35' : '1';
-          btnHubPrev.style.pointerEvents = hubTrack.scrollLeft <= 5 ? 'none' : 'auto';
-          btnHubNext.style.opacity = hubTrack.scrollLeft >= maxScroll - 5 ? '0.35' : '1';
-          btnHubNext.style.pointerEvents = hubTrack.scrollLeft >= maxScroll - 5 ? 'none' : 'auto';
+          btnHubPrev.style.opacity = hubTrack.scrollLeft <= 10 ? '0.35' : '1';
+          btnHubNext.style.opacity = hubTrack.scrollLeft >= maxScroll - 10 ? '0.35' : '1';
+        }
+
+        function scrollTrackToCard(trackEl, direction) {
+          if (!trackEl) return;
+          var cards = Array.from(trackEl.children).filter(function(el) {
+            return el.nodeType === 1 && (el.classList.contains('hub-card') || el.classList.contains('bestseller-card') || el.classList.contains('product-card'));
+          });
+          if (cards.length === 0) return;
+
+          var currentScroll = trackEl.scrollLeft;
+          var targetScroll = currentScroll;
+          var threshold = 30;
+
+          if (direction > 0) {
+            for (var i = 0; i < cards.length; i++) {
+              var left = cards[i].offsetLeft;
+              if (left > currentScroll + threshold) {
+                targetScroll = left;
+                break;
+              }
+            }
+            if (targetScroll === currentScroll) {
+              targetScroll = currentScroll + (cards[0].offsetWidth + 20);
+            }
+          } else {
+            for (var i = cards.length - 1; i >= 0; i--) {
+              var left = cards[i].offsetLeft;
+              if (left < currentScroll - threshold) {
+                targetScroll = left;
+                break;
+              }
+            }
+            if (targetScroll === currentScroll) {
+              targetScroll = Math.max(0, currentScroll - (cards[0].offsetWidth + 20));
+            }
+          }
+
+          trackEl.scrollTo({ left: Math.max(0, targetScroll), behavior: 'smooth' });
         }
 
         if (hubTrack && btnHubPrev && btnHubNext) {
           btnHubPrev.addEventListener('click', function(e) {
             e.preventDefault();
-            hubTrack.scrollBy({ left: -410, behavior: 'smooth' });
+            scrollTrackToCard(hubTrack, -1);
           });
           btnHubNext.addEventListener('click', function(e) {
             e.preventDefault();
-            hubTrack.scrollBy({ left: 410, behavior: 'smooth' });
+            scrollTrackToCard(hubTrack, 1);
           });
-          hubTrack.addEventListener('scroll', updateHubArrowStates);
+          hubTrack.addEventListener('scroll', updateHubArrowStates, { passive: true });
           window.addEventListener('resize', updateHubArrowStates);
           setTimeout(updateHubArrowStates, 100);
         }
@@ -3308,22 +3395,20 @@ ${allCardsHtml}
         function updateArrowStates() {
           if (!track || !btnPrev || !btnNext) return;
           var maxScroll = track.scrollWidth - track.clientWidth;
-          btnPrev.style.opacity = track.scrollLeft <= 5 ? '0.35' : '1';
-          btnPrev.style.pointerEvents = track.scrollLeft <= 5 ? 'none' : 'auto';
-          btnNext.style.opacity = track.scrollLeft >= maxScroll - 5 ? '0.35' : '1';
-          btnNext.style.pointerEvents = track.scrollLeft >= maxScroll - 5 ? 'none' : 'auto';
+          btnPrev.style.opacity = track.scrollLeft <= 10 ? '0.35' : '1';
+          btnNext.style.opacity = track.scrollLeft >= maxScroll - 10 ? '0.35' : '1';
         }
 
         if (track && btnPrev && btnNext) {
           btnPrev.addEventListener('click', function(e) {
             e.preventDefault();
-            track.scrollBy({ left: -460, behavior: 'smooth' });
+            scrollTrackToCard(track, -1);
           });
           btnNext.addEventListener('click', function(e) {
             e.preventDefault();
-            track.scrollBy({ left: 460, behavior: 'smooth' });
+            scrollTrackToCard(track, 1);
           });
-          track.addEventListener('scroll', updateArrowStates);
+          track.addEventListener('scroll', updateArrowStates, { passive: true });
           window.addEventListener('resize', updateArrowStates);
           setTimeout(updateArrowStates, 100);
         }

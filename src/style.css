@@ -40,7 +40,6 @@
 
 html {
   height: 100%;
-  overflow-x: hidden;
   width: 100%;
   max-width: 100%;
   scroll-behavior: smooth;
@@ -110,7 +109,6 @@ body {
   flex-direction: column;
   width: 100%;
   max-width: 100%;
-  overflow-x: hidden;
   touch-action: manipulation;
 }
 
@@ -1214,7 +1212,6 @@ button:active,
 .category-hub-track {
   display: flex;
   overflow-x: auto;
-  scroll-behavior: smooth;
   scroll-snap-type: x mandatory;
   gap: 20px;
   padding: 8px 4px 16px;
@@ -6199,7 +6196,8 @@ button:active,
 /* Sticky Summary Card */
 .checkout-summary-col {
   position: sticky;
-  top: 90px;
+  top: 24px;
+  z-index: 10;
 }
 
 .checkout-summary-card {
@@ -6598,8 +6596,8 @@ button:active,
 .checkout-page-section {
   width: 100%;
   max-width: 100%;
-  overflow-x: hidden;
   box-sizing: border-box;
+  overflow: visible;
 }
 
 .checkout-container {
@@ -6608,7 +6606,7 @@ button:active,
   margin: 0 auto;
   padding: 0 16px;
   box-sizing: border-box;
-  overflow-x: hidden;
+  overflow: visible;
 }
 
 @media (max-width: 1100px) {
@@ -6688,6 +6686,29 @@ button:active,
     flex: 1;
     min-width: 8px;
     width: auto;
+  }
+
+  html,
+  body {
+    overflow-x: hidden !important;
+  }
+
+  .checkout-page-section,
+  .checkout-container {
+    overflow-x: hidden !important;
+  }
+
+  /* Mobile input fields: taller height and comfortable touch padding */
+  .co-input,
+  .co-select,
+  .co-textarea,
+  .map-search-input,
+  .co-promo-input,
+  input.co-input {
+    min-height: 50px !important;
+    padding: 13px 16px !important;
+    font-size: 16px !important;
+    border-radius: 14px !important;
   }
 
   .checkout-card {
