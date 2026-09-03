@@ -1217,9 +1217,8 @@ button:active,
   gap: 20px;
   padding: 8px 4px 16px;
   scrollbar-width: none;
-  -ms-overflow-style: none;
-  touch-action: pan-x pan-y;
-  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: auto;
   user-select: none;
 }
 
@@ -1694,9 +1693,8 @@ button:active,
   scroll-behavior: smooth;
   padding: 10px 4px 18px;
   scrollbar-width: none;
-  -ms-overflow-style: none;
-  touch-action: pan-x pan-y;
-  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: auto;
   user-select: none;
 }
 
@@ -5090,99 +5088,134 @@ button:active,
 
 
 
-  /* Yandex Maps Address Modal on Mobile (Bottom Sheet / Fullscreen) */
+  /* Yandex Maps Address Modal on Mobile (100% Fullscreen Like Cart Drawer) */
   .address-modal-wrap {
-    padding: 0;
-    align-items: flex-end;
+    padding: 0 !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+    inset: 0 !important;
+    position: fixed !important;
+    z-index: 10000 !important;
   }
 
-  .address-modal-container {
-    width: 100%;
-    max-height: 94vh;
-    border-radius: 20px 20px 0 0;
-    margin-top: auto;
+  .address-modal-container,
+  .address-modal-container.delivery-modal-vertical {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    max-height: 100vh !important;
+    max-height: 100dvh !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
   }
 
   .address-modal-header {
-    padding: 14px 16px;
+    padding: 12px 16px !important;
+    flex-shrink: 0 !important;
+    border-bottom: 1px solid #E2EFE6 !important;
+    background: #FFFFFF !important;
   }
 
   .address-modal-title {
-    font-size: 17px;
+    font-size: 16.5px !important;
+    font-weight: 700 !important;
+    color: #14241A !important;
   }
 
   .address-modal-subtitle {
-    font-size: 12px;
+    font-size: 12px !important;
+    color: #64748B !important;
   }
 
-  .address-modal-body {
-    flex-direction: column-reverse;
-    min-height: auto;
-    max-height: 75vh;
-    overflow-y: auto;
+  .address-modal-body,
+  .address-modal-body.delivery-modal-body-vertical {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 auto !important;
+    height: calc(100vh - 60px) !important;
+    height: calc(100dvh - 60px) !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+    background: #F8FAF9 !important;
   }
 
-  .address-map-wrapper {
-    min-height: 200px;
-    height: 200px;
-    flex: none;
+  .delivery-search-section {
+    flex-shrink: 0 !important;
+    padding: 10px 14px 6px !important;
   }
 
-  .yandex-map-container {
-    min-height: 200px;
+  .delivery-main-input {
+    font-size: 16px !important;
+    height: 46px !important;
+    border-radius: 12px !important;
   }
 
-  .address-sidebar-form {
-    width: 100%;
-    padding: 14px;
-    border-right: none;
-    gap: 12px;
+  .private-house-row {
+    flex-shrink: 0 !important;
+    padding: 4px 14px !important;
+    margin-bottom: 0 !important;
   }
 
-  .address-main-input {
-    font-size: 16px; /* Prevents auto-zoom in iOS Safari */
-    height: 42px;
+  .delivery-subinputs-row {
+    flex-shrink: 0 !important;
+    padding: 4px 14px 8px !important;
   }
 
-  .quick-district-tags {
-    gap: 4px;
+  .delivery-pill-input {
+    height: 38px !important;
+    font-size: 14px !important;
   }
 
-  .district-tag {
-    padding: 5px 10px;
-    font-size: 11px;
+  .delivery-modal-map-box {
+    flex: 1 1 auto !important;
+    min-height: 220px !important;
+    height: 100% !important;
+    position: relative !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    border: none !important;
   }
 
-  .address-subfields-grid {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 6px;
+  .yandex-map-full {
+    width: 100% !important;
+    height: 100% !important;
   }
 
-  .address-subinput {
-    font-size: 14px;
-    height: 36px;
+  .map-geo-btn-floating {
+    bottom: 16px !important;
+    right: 14px !important;
   }
 
-  .delivery-calc-card {
-    padding: 10px 12px;
-    gap: 8px;
+  .delivery-modal-footer {
+    flex-shrink: 0 !important;
+    padding: 12px 14px max(14px, env(safe-area-inset-bottom, 14px)) !important;
+    background: #FFFFFF !important;
+    border-top: 1px solid #E8F2EB !important;
+    box-shadow: 0 -4px 16px rgba(18, 48, 30, 0.06) !important;
+    display: flex !important;
+    gap: 10px !important;
+    z-index: 10 !important;
   }
 
-  .calc-metric-val {
-    font-size: 14.5px;
+  .btn-modal-cancel {
+    height: 48px !important;
+    flex: 0 0 100px !important;
   }
 
-  .calc-price-val {
-    font-size: 16px;
-  }
-
-  .btn-confirm-address {
-    height: 44px;
-    font-size: 14px;
+  .btn-modal-confirm {
+    height: 48px !important;
+    flex: 1 1 auto !important;
+    font-size: 14.5px !important;
   }
 
   .map-legend {
-    display: none; /* Save space on mobile map view */
+    display: none !important;
   }
 
   .map-geo-btn {
@@ -6944,8 +6977,8 @@ button:active,
 
   /* Mobile input fields: taller height and comfortable touch padding */
   .co-input,
+  .co-input,
   .co-select,
-  .co-textarea,
   .map-search-input,
   .co-promo-input,
   input.co-input {
@@ -6953,6 +6986,23 @@ button:active,
     padding: 13px 16px !important;
     font-size: 16px !important;
     border-radius: 14px !important;
+  }
+
+  /* Block 4: Free gift card & comments textareas - wider/taller and without internal scroll */
+  .co-textarea {
+    min-height: 95px !important;
+    height: auto !important;
+    padding: 14px 16px !important;
+    font-size: 15px !important;
+    line-height: 1.45 !important;
+    border-radius: 14px !important;
+    resize: none !important;
+    overflow: hidden !important;
+    scrollbar-width: none !important;
+  }
+
+  .co-textarea::-webkit-scrollbar {
+    display: none !important;
   }
 
   .checkout-card {

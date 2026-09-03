@@ -5522,11 +5522,11 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
               <div class="checkout-card-body">
                 <div class="co-field-wrap">
                   <label class="co-label" for="co-postcard-text">Текст открытки к букету (бесплатно)</label>
-                  <textarea class="co-textarea" id="co-postcard-text" rows="2" placeholder="Напишите тёплые слова, и наш флорист от руки подпишет фирменную открытку..."></textarea>
+                  <textarea class="co-textarea" id="co-postcard-text" rows="3" placeholder="Напишите тёплые слова, и наш флорист от руки подпишет фирменную открытку..."></textarea>
                 </div>
-                <div class="co-field-wrap" style="margin-top: 12px;">
+                <div class="co-field-wrap" style="margin-top: 14px;">
                   <label class="co-label" for="co-order-comment">Комментарий к заказу для флориста или курьера</label>
-                  <textarea class="co-textarea" id="co-order-comment" rows="2" placeholder="Ориентир для курьера или пожелания по упаковке и доставке..."></textarea>
+                  <textarea class="co-textarea" id="co-order-comment" rows="3" placeholder="Ориентир для курьера или пожелания по упаковке и доставке..."></textarea>
                 </div>
               </div>
             </div>
@@ -7264,10 +7264,10 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
                 }
 
                 if (coords && updateInput !== false) {
-                  ymaps.geocode(coords, { kind: 'house', results: 1 }).then(function(res) {
+                  ymaps.geocode(coords, { results: 1 }).then(function(res) {
                     var firstGeoObject = res.geoObjects.get(0);
                     if (firstGeoObject) {
-                      var fullAddr = firstGeoObject.getAddressLine();
+                      var fullAddr = firstGeoObject.getAddressLine() || '';
                       var shortName = firstGeoObject.properties.get('name') || fullAddr;
                       var cleanShort = shortName
                         .replace(/Донецкая Народная Республика[^,]*,s*/gi, '')
@@ -7275,8 +7275,16 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
                         .replace(/г.?s*Горловка,?s*/gi, '')
                         .replace(/Горловка,?s*/gi, '')
                         .trim();
-                      deliveryInfo.address = fullAddr;
+                      var cleanFull = fullAddr
+                        .replace(/Донецкая Народная Республика[^,]*,s*/gi, '')
+                        .replace(/ДНР[^,]*,s*/gi, '')
+                        .trim();
+                      deliveryInfo.address = cleanFull || fullAddr;
                       if (mapAddressInput) mapAddressInput.value = cleanShort || shortName;
+                      var coAddr = document.getElementById('co-selected-address-text');
+                      if (coAddr) coAddr.textContent = cleanFull || shortName;
+                      applyDeliveryInfoToSite();
+                      updateCheckoutAddressUI();
                     }
                     updateModalCalcView();
                   }).catch(function() {
@@ -7353,6 +7361,39 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
 
               myMap.geoObjects.add(shopPlacemark);
               myMap.geoObjects.add(clientPlacemark);
+
+              // Popular interactive points across Gorlovka
+              var popularPoints = [
+                { name: 'Магазин «Цветочный Рай»', addr: 'г. Горловка, ул. Пушкинская, 36а', coords: [48.306075, 38.016335], icon: 'islands#darkGreenDotIcon' },
+                { name: 'Площадь Победы', addr: 'г. Горловка, пр. Победы, 35', coords: [48.305412, 38.019542], icon: 'islands#violetDotIcon' },
+                { name: 'ТРЦ «Пассаж»', addr: 'г. Горловка, пр. Ленина, 12', coords: [48.308215, 38.014210], icon: 'islands#blueDotIcon' },
+                { name: 'Автовокзал Горловка', addr: 'г. Горловка, ул. Горловской Дивизии, 42', coords: [48.318450, 38.032120], icon: 'islands#orangeDotIcon' },
+                { name: 'КСК «Экипаж»', addr: 'г. Горловка, ул. Комсомольская, 28', coords: [48.301540, 38.026410], icon: 'islands#darkOrangeDotIcon' },
+                { name: 'Горбольница №2', addr: 'г. Горловка, пр. Ленина, 26', coords: [48.312150, 38.009840], icon: 'islands#redDotIcon' },
+                { name: 'Ж/Д Вокзал Горловка', addr: 'г. Горловка, ул. Станционная, 1', coords: [48.324510, 38.051230], icon: 'islands#nightDotIcon' }
+              ];
+
+              popularPoints.forEach(function(pt) {
+                var mark = new ymaps.Placemark(pt.coords, {
+                  hintContent: '<strong>' + pt.name + '</strong><br/>' + pt.addr + '<br/><span style="color:#2D6A4F; font-size:11px;">Кликните для выбора адреса</span>',
+                  balloonContent: '<strong>' + pt.name + '</strong><br/>' + pt.addr
+                }, {
+                  preset: pt.icon
+                });
+
+                mark.events.add('click', function() {
+                  clientPlacemark.geometry.setCoordinates(pt.coords);
+                  if (mapAddressInput) mapAddressInput.value = pt.addr.replace(/^г.?s*Горловка,?s*/gi, '');
+                  deliveryInfo.address = pt.addr;
+                  var coAddr = document.getElementById('co-selected-address-text');
+                  if (coAddr) coAddr.textContent = pt.addr;
+                  applyDeliveryInfoToSite();
+                  updateCheckoutAddressUI();
+                  checkCoordsZone(pt.coords, false);
+                });
+
+                myMap.geoObjects.add(mark);
+              });
 
               clientPlacemark.events.add('dragend', function() {
                 var coords = clientPlacemark.geometry.getCoordinates();
@@ -8313,44 +8354,18 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
           setTimeout(updateArrowStates, 100);
         }
 
-        function enableDragToScroll(container) {
-          if (!container) return;
-          var isDown = false;
-          var startX = 0;
-          var scrollLeft = 0;
-          var hasMoved = false;
-
-          container.addEventListener('mousedown', function(e) {
-            if (e.button !== 0) return;
-            isDown = true;
-            hasMoved = false;
-            startX = e.pageX - container.offsetLeft;
-            scrollLeft = container.scrollLeft;
-          });
-
-          window.addEventListener('mouseup', function() {
-            if (isDown) isDown = false;
-          });
-
-          container.addEventListener('mousemove', function(e) {
-            if (!isDown) return;
-            var x = e.pageX - container.offsetLeft;
-            var walk = (x - startX) * 1.5;
-            if (Math.abs(walk) > 4) {
-              hasMoved = true;
-              e.preventDefault();
+        // Auto-expand Block 4 textareas so they are tall and have zero scrollbars
+        ['co-postcard-text', 'co-order-comment'].forEach(function(id) {
+          var ta = document.getElementById(id);
+          if (ta) {
+            function resizeTa() {
+              ta.style.height = 'auto';
+              ta.style.height = Math.max(95, ta.scrollHeight) + 'px';
             }
-            container.scrollLeft = scrollLeft - walk;
-          });
-
-          container.addEventListener('click', function(e) {
-            if (hasMoved) {
-              e.stopPropagation();
-              e.preventDefault();
-              hasMoved = false;
-            }
-          }, true);
-        }
+            ta.addEventListener('input', resizeTa);
+            setTimeout(resizeTa, 200);
+          }
+        });
 
         // Bestsellers Category Tabs
         var bestTabs = document.querySelectorAll('.best-tab');
@@ -8537,9 +8552,7 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
           setTimeout(updateRibbonArrowStates, 100);
         }
 
-        enableDragToScroll(pageRibbonTrack);
-        enableDragToScroll(hubTrack);
-        enableDragToScroll(track);
+
 
         // --- 7. CATALOG 2-COLUMN FLYOUT LOGIC (1:1 SCREENSHOT MATCH) ---
         var btnCatalog = document.getElementById('btn-catalog');
