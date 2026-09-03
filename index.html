@@ -8176,46 +8176,61 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
         function updateHubArrowStates() {
           if (!hubTrack || !btnHubPrev || !btnHubNext) return;
           var maxScroll = hubTrack.scrollWidth - hubTrack.clientWidth;
-          btnHubPrev.style.opacity = hubTrack.scrollLeft <= 10 ? '0.35' : '1';
-          btnHubNext.style.opacity = hubTrack.scrollLeft >= maxScroll - 10 ? '0.35' : '1';
+          btnHubPrev.style.opacity = hubTrack.scrollLeft <= 8 ? '0.35' : '1';
+          btnHubPrev.style.cursor = hubTrack.scrollLeft <= 8 ? 'default' : 'pointer';
+          btnHubNext.style.opacity = hubTrack.scrollLeft >= maxScroll - 8 ? '0.35' : '1';
+          btnHubNext.style.cursor = hubTrack.scrollLeft >= maxScroll - 8 ? 'default' : 'pointer';
         }
 
         function scrollTrackToCard(trackEl, direction) {
           if (!trackEl) return;
           var cards = Array.from(trackEl.children).filter(function(el) {
-            return el.nodeType === 1 && (el.classList.contains('hub-card') || el.classList.contains('bestseller-card') || el.classList.contains('product-card'));
+            return el.nodeType === 1 && (el.offsetWidth > 0);
           });
           if (cards.length === 0) return;
 
-          var currentScroll = trackEl.scrollLeft;
-          var targetScroll = currentScroll;
-          var threshold = 30;
+          var maxScroll = Math.max(0, trackEl.scrollWidth - trackEl.clientWidth);
+          var current = (typeof trackEl._targetScroll === 'number') ? trackEl._targetScroll : trackEl.scrollLeft;
+
+          if (Math.abs(trackEl.scrollLeft - current) > (cards[0].offsetWidth * 1.5)) {
+            current = trackEl.scrollLeft;
+          }
+
+          var step = cards[0].offsetWidth + 18;
+          var target = current;
 
           if (direction > 0) {
             for (var i = 0; i < cards.length; i++) {
-              var left = cards[i].offsetLeft;
-              if (left > currentScroll + threshold) {
-                targetScroll = left;
+              var left = cards[i].offsetLeft - trackEl.offsetLeft;
+              if (left > current + 15) {
+                target = left;
                 break;
               }
             }
-            if (targetScroll === currentScroll) {
-              targetScroll = currentScroll + (cards[0].offsetWidth + 20);
+            if (target === current) {
+              target = Math.min(maxScroll, current + step);
             }
           } else {
             for (var i = cards.length - 1; i >= 0; i--) {
-              var left = cards[i].offsetLeft;
-              if (left < currentScroll - threshold) {
-                targetScroll = left;
+              var left = cards[i].offsetLeft - trackEl.offsetLeft;
+              if (left < current - 15) {
+                target = left;
                 break;
               }
             }
-            if (targetScroll === currentScroll) {
-              targetScroll = Math.max(0, currentScroll - (cards[0].offsetWidth + 20));
+            if (target === current) {
+              target = Math.max(0, current - step);
             }
           }
 
-          trackEl.scrollTo({ left: Math.max(0, targetScroll), behavior: 'smooth' });
+          target = Math.max(0, Math.min(maxScroll, target));
+          trackEl._targetScroll = target;
+          trackEl.scrollTo({ left: target, behavior: 'smooth' });
+
+          clearTimeout(trackEl._scrollTimer);
+          trackEl._scrollTimer = setTimeout(function() {
+            trackEl._targetScroll = trackEl.scrollLeft;
+          }, 450);
         }
 
         if (hubTrack && btnHubPrev && btnHubNext) {
@@ -8239,8 +8254,10 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
         function updateArrowStates() {
           if (!track || !btnPrev || !btnNext) return;
           var maxScroll = track.scrollWidth - track.clientWidth;
-          btnPrev.style.opacity = track.scrollLeft <= 10 ? '0.35' : '1';
-          btnNext.style.opacity = track.scrollLeft >= maxScroll - 10 ? '0.35' : '1';
+          btnPrev.style.opacity = track.scrollLeft <= 8 ? '0.35' : '1';
+          btnPrev.style.cursor = track.scrollLeft <= 8 ? 'default' : 'pointer';
+          btnNext.style.opacity = track.scrollLeft >= maxScroll - 8 ? '0.35' : '1';
+          btnNext.style.cursor = track.scrollLeft >= maxScroll - 8 ? 'default' : 'pointer';
         }
 
         if (track && btnPrev && btnNext) {
@@ -8461,22 +8478,22 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
         function updateRibbonArrowStates() {
           if (!pageRibbonTrack || !btnPageRibbonPrev || !btnPageRibbonNext) return;
           var maxScroll = pageRibbonTrack.scrollWidth - pageRibbonTrack.clientWidth;
-          btnPageRibbonPrev.style.opacity = pageRibbonTrack.scrollLeft <= 5 ? '0.35' : '1';
-          btnPageRibbonPrev.style.pointerEvents = pageRibbonTrack.scrollLeft <= 5 ? 'none' : 'auto';
-          btnPageRibbonNext.style.opacity = pageRibbonTrack.scrollLeft >= maxScroll - 5 ? '0.35' : '1';
-          btnPageRibbonNext.style.pointerEvents = pageRibbonTrack.scrollLeft >= maxScroll - 5 ? 'none' : 'auto';
+          btnPageRibbonPrev.style.opacity = pageRibbonTrack.scrollLeft <= 8 ? '0.35' : '1';
+          btnPageRibbonPrev.style.cursor = pageRibbonTrack.scrollLeft <= 8 ? 'default' : 'pointer';
+          btnPageRibbonNext.style.opacity = pageRibbonTrack.scrollLeft >= maxScroll - 8 ? '0.35' : '1';
+          btnPageRibbonNext.style.cursor = pageRibbonTrack.scrollLeft >= maxScroll - 8 ? 'default' : 'pointer';
         }
 
         if (pageRibbonTrack && btnPageRibbonPrev && btnPageRibbonNext) {
           btnPageRibbonPrev.addEventListener('click', function(e) {
             e.preventDefault();
-            pageRibbonTrack.scrollBy({ left: -340, behavior: 'smooth' });
+            scrollTrackToCard(pageRibbonTrack, -1);
           });
           btnPageRibbonNext.addEventListener('click', function(e) {
             e.preventDefault();
-            pageRibbonTrack.scrollBy({ left: 340, behavior: 'smooth' });
+            scrollTrackToCard(pageRibbonTrack, 1);
           });
-          pageRibbonTrack.addEventListener('scroll', updateRibbonArrowStates);
+          pageRibbonTrack.addEventListener('scroll', updateRibbonArrowStates, { passive: true });
           window.addEventListener('resize', updateRibbonArrowStates);
           setTimeout(updateRibbonArrowStates, 100);
         }
