@@ -51,14 +51,21 @@ let indexHtml = `<!DOCTYPE html>
     <meta name="MobileOptimized" content="320" />
     <title>Цветочный Рай — Доставка цветов и подарков в Горловке</title>
     <link rel="preload" as="image" href="./hero.png" fetchpriority="high" />
-    <!-- Yandex Maps API & Native SuggestView with Official Keys -->
-    <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU&apikey=${YANDEX_MAPS_API_KEY}&suggest_apikey=${YANDEX_SUGGEST_API_KEY}" type="text/javascript" defer></script>
+    <!-- Yandex Maps API & Native Geocoding -->
+    <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU" type="text/javascript" defer></script>
     <script type="text/javascript" defer>
 ${gorlovkaZonesScript}
     </script>
     <link rel="stylesheet" href="./src/style.css" />
   </head>
   <body>
+    <!-- Luxury Branded App Preloader for Smooth Page Load & Refresh -->
+    <div class="app-preloader" id="app-preloader">
+      <div class="app-preloader__content">
+        <img src="./logo.png" alt="Цветочный Рай" class="app-preloader__logo" />
+        <div class="app-preloader__spinner"></div>
+      </div>
+    </div>
     <!-- Ambient Botanical Floral Background Wallpaper (Whole Intact HD Botanical Art) -->
     <div class="site-floral-bg" id="site-floral-bg" aria-hidden="true">
       <img src="./floral/flower_1.png" class="floral-decor-item" style="top: 2%; left: 25px; width: 230px; transform: rotate(-10deg);" alt="" />
@@ -2414,7 +2421,7 @@ ${allCardsHtml}
           }
         });
 
-        var isYandexMapInited = false;
+              var isYandexMapInited = false;
         function initYandexMapGorlovka() {
           if (isYandexMapInited || typeof ymaps === 'undefined') return;
           try {
@@ -2427,14 +2434,14 @@ ${allCardsHtml}
               
               var myMap = new ymaps.Map('yandex-delivery-map', {
                 center: gorlovkaCenter,
-                zoom: 12,
+                zoom: 13,
                 controls: ['zoomControl', 'geolocationControl']
               });
 
               var zonesData = window.GORLOVKA_DELIVERY_ZONES || [];
               var zonesCollection = new ymaps.GeoObjectCollection();
 
-              function applyZoneData(foundZone, coords, updateInput) {
+              function applyZoneData(foundZone) {
                 if (foundZone) {
                   deliveryInfo.district = foundZone.name;
                   deliveryInfo.price = foundZone.price;
@@ -2444,40 +2451,10 @@ ${allCardsHtml}
                   deliveryInfo.price = 650;
                   deliveryInfo.time = '60-80 мин';
                 }
-
-                if (coords && updateInput !== false) {
-                  ymaps.geocode(coords, { results: 1 }).then(function(res) {
-                    var firstGeoObject = res.geoObjects.get(0);
-                    if (firstGeoObject) {
-                      var fullAddr = firstGeoObject.getAddressLine() || '';
-                      var shortName = firstGeoObject.properties.get('name') || fullAddr;
-                      var cleanShort = shortName
-                        .replace(/Донецкая Народная Республика[^,]*,\s*/gi, '')
-                        .replace(/ДНР[^,]*,\s*/gi, '')
-                        .replace(/г\.?\s*Горловка,?\s*/gi, '')
-                        .replace(/Горловка,?\s*/gi, '')
-                        .trim();
-                      var cleanFull = fullAddr
-                        .replace(/Донецкая Народная Республика[^,]*,\s*/gi, '')
-                        .replace(/ДНР[^,]*,\s*/gi, '')
-                        .trim();
-                      deliveryInfo.address = cleanFull || fullAddr;
-                      if (mapAddressInput) mapAddressInput.value = cleanShort || shortName;
-                      var coAddr = document.getElementById('co-selected-address-text');
-                      if (coAddr) coAddr.textContent = cleanFull || shortName;
-                      applyDeliveryInfoToSite();
-                      updateCheckoutAddressUI();
-                    }
-                    updateModalCalcView();
-                  }).catch(function() {
-                    updateModalCalcView();
-                  });
-                } else {
-                  updateModalCalcView();
-                }
+                updateModalCalcView();
               }
 
-              function checkCoordsZone(coords, updateInput) {
+              function checkCoordsZone(coords) {
                 var found = null;
                 for (var i = 0; i < zonesData.length; i++) {
                   if (pointInPolygon(coords, zonesData[i].coords)) {
@@ -2485,128 +2462,192 @@ ${allCardsHtml}
                     break;
                   }
                 }
-                applyZoneData(found, coords, updateInput);
+                applyZoneData(found);
               }
 
               window.gorlovkaYandexMapInstance = myMap;
               window.checkCoordsZoneGlobal = checkCoordsZone;
 
-              // Add all 25 polygon zones with official colors, tooltips & hover
+              // ONLY ONE SINGLE PLACEMARK ON THE ENTIRE MAP
+              var deliveryPlacemark = new ymaps.Placemark(gorlovkaCenter, {
+                hintContent: 'Адрес доставки в Горловке',
+                balloonContent: '<strong>Горловка, пр. Победы, 35</strong>'
+              }, {
+                preset: 'islands#redDotIcon',
+                draggable: true
+              });
+
+              window.gorlovkaClientPlacemark = deliveryPlacemark;
+
+              function applyCleanAddress(fullAddr, shortName) {
+                var cleanShort = (shortName || fullAddr || '')
+                  .replace(/Донецкая Народная Республика[^,]*,\s*/gi, '')
+                  .replace(/ДНР[^,]*,\s*/gi, '')
+                  .replace(/г\.?\s*Горловка,?\s*/gi, '')
+                  .replace(/Горловка,?\s*/gi, '')
+                  .trim();
+                var cleanFull = (fullAddr || '')
+                  .replace(/Донецкая Народная Республика[^,]*,\s*/gi, '')
+                  .replace(/ДНР[^,]*,\s*/gi, '')
+                  .trim();
+
+                var finalFull = cleanFull.indexOf('Горловка') !== -1 ? cleanFull : ('Горловка, ' + (cleanShort || cleanFull));
+                var finalShort = cleanShort || cleanFull || 'Адрес на карте';
+
+                deliveryInfo.address = finalFull;
+                if (mapAddressInput) mapAddressInput.value = finalShort;
+                var coAddr = document.getElementById('co-selected-address-text');
+                if (coAddr) coAddr.textContent = finalFull;
+
+                deliveryPlacemark.properties.set('balloonContent', '<strong>' + finalShort + '</strong><br/><span style="color: #2D6A4F; font-size: 13px;">Доставка: ' + deliveryInfo.price + ' ₽ • ' + deliveryInfo.time + '</span>');
+                deliveryPlacemark.balloon.open();
+
+                applyDeliveryInfoToSite();
+                updateCheckoutAddressUI();
+                updateModalCalcView();
+              }
+
+              function fallbackNominatim(coords) {
+                var url = 'https://nominatim.openstreetmap.org/reverse?format=json&lat=' + coords[0] + '&lon=' + coords[1] + '&accept-language=ru';
+                fetch(url, { headers: { 'Accept': 'application/json' } })
+                  .then(function(r) { return r.json(); })
+                  .then(function(data) {
+                    if (data && data.address) {
+                      var road = data.address.road || data.address.street || data.address.pedestrian || data.address.suburb || '';
+                      var house = data.address.house_number || '';
+                      var shortName = road ? (road + (house ? (', ' + house) : '')) : (data.name || 'Горловка');
+                      applyCleanAddress('Горловка, ' + shortName, shortName);
+                    } else {
+                      var dist = deliveryInfo.district || 'Горловка';
+                      applyCleanAddress('Горловка, район ' + dist, 'район ' + dist);
+                    }
+                  })
+                  .catch(function() {
+                    var dist = deliveryInfo.district || 'Горловка';
+                    applyCleanAddress('Горловка, район ' + dist, 'район ' + dist);
+                  });
+              }
+
+              function reverseGeocodeCoords(coords) {
+                var handled = false;
+                if (typeof ymaps !== 'undefined' && ymaps.geocode) {
+                  try {
+                    ymaps.geocode(coords, { results: 1 }).then(function(res) {
+                      var first = res && res.geoObjects && res.geoObjects.get(0);
+                      if (first) {
+                        handled = true;
+                        var full = first.getAddressLine() || '';
+                        var shortN = first.properties.get('name') || full;
+                        applyCleanAddress(full, shortN);
+                      } else {
+                        fallbackNominatim(coords);
+                      }
+                    }).catch(function() {
+                      fallbackNominatim(coords);
+                    });
+                  } catch(e) {
+                    fallbackNominatim(coords);
+                  }
+                } else {
+                  fallbackNominatim(coords);
+                }
+              }
+
+              function setDeliveryLocationAndAddress(coords) {
+                deliveryPlacemark.geometry.setCoordinates(coords);
+                myMap.panTo(coords, { duration: 300 });
+                checkCoordsZone(coords);
+                reverseGeocodeCoords(coords);
+              }
+
+              // Add polygon delivery zones
               zonesData.forEach(function(zone) {
                 var polygon = new ymaps.Polygon([zone.coords], {
-                  hintContent: '<div style="padding: 4px 8px; font-family: sans-serif; font-size: 13px;"><strong>' + zone.name + '</strong><br/>Доставка: <strong style="color: #1B4D36;">' + zone.price + ' ₽</strong> • ' + zone.time + ' мин</div>',
-                  balloonContent: '<div style="padding: 10px; font-family: sans-serif; font-size: 14px;"><strong>Район: ' + zone.name + '</strong><br/>Стоимость доставки: <strong style="color: #2D6A4F; font-size: 16px;">' + zone.price + ' ₽</strong><br/>Время доставки: <strong>' + zone.time + ' мин</strong></div>'
+                  hintContent: '<div style="padding: 4px 8px; font-family: sans-serif; font-size: 13px;"><strong>' + zone.name + '</strong><br/>Доставка: <strong style="color: #1B4D36;">' + zone.price + ' ₽</strong> • ' + zone.time + ' мин</div>'
                 }, {
                   fillColor: zone.fillColor,
-                  fillOpacity: 0.45,
+                  fillOpacity: 0.40,
                   strokeColor: zone.strokeColor,
-                  strokeOpacity: 0.95,
+                  strokeOpacity: 0.90,
                   strokeWidth: 2,
                   cursor: 'pointer'
                 });
 
                 polygon.events.add('mouseenter', function() {
-                  polygon.options.set('fillOpacity', 0.72);
+                  polygon.options.set('fillOpacity', 0.65);
                   polygon.options.set('strokeWidth', 3);
                 });
 
                 polygon.events.add('mouseleave', function() {
-                  polygon.options.set('fillOpacity', 0.45);
+                  polygon.options.set('fillOpacity', 0.40);
                   polygon.options.set('strokeWidth', 2);
                 });
 
                 polygon.events.add('click', function(e) {
                   var coords = e.get('coords');
-                  clientPlacemark.geometry.setCoordinates(coords);
-                  applyZoneData(zone, coords, true);
+                  setDeliveryLocationAndAddress(coords);
                 });
 
                 zonesCollection.add(polygon);
               });
 
               myMap.geoObjects.add(zonesCollection);
+              myMap.geoObjects.add(deliveryPlacemark);
 
-              var shopPlacemark = new ymaps.Placemark(gorlovkaCenter, {
-                balloonContent: '<strong>«Цветочный Рай»</strong><br/>г. Горловка, ул. Пушкинская, 36а'
-              }, {
-                preset: 'islands#darkGreenDotIcon'
-              });
-
-              var clientPlacemark = new ymaps.Placemark(gorlovkaCenter, {
-                balloonContent: 'Адрес доставки в Горловке'
-              }, {
-                preset: 'islands#redCircleDotIcon',
-                draggable: true
-              });
-
-              window.gorlovkaClientPlacemark = clientPlacemark;
-
-              myMap.geoObjects.add(shopPlacemark);
-              myMap.geoObjects.add(clientPlacemark);
-
-              // Popular interactive points across Gorlovka
-              var popularPoints = [
-                { name: 'Магазин «Цветочный Рай»', addr: 'г. Горловка, ул. Пушкинская, 36а', coords: [48.306075, 38.016335], icon: 'islands#darkGreenDotIcon' },
-                { name: 'Площадь Победы', addr: 'г. Горловка, пр. Победы, 35', coords: [48.305412, 38.019542], icon: 'islands#violetDotIcon' },
-                { name: 'ТРЦ «Пассаж»', addr: 'г. Горловка, пр. Ленина, 12', coords: [48.308215, 38.014210], icon: 'islands#blueDotIcon' },
-                { name: 'Автовокзал Горловка', addr: 'г. Горловка, ул. Горловской Дивизии, 42', coords: [48.318450, 38.032120], icon: 'islands#orangeDotIcon' },
-                { name: 'КСК «Экипаж»', addr: 'г. Горловка, ул. Комсомольская, 28', coords: [48.301540, 38.026410], icon: 'islands#darkOrangeDotIcon' },
-                { name: 'Горбольница №2', addr: 'г. Горловка, пр. Ленина, 26', coords: [48.312150, 38.009840], icon: 'islands#redDotIcon' },
-                { name: 'Ж/Д Вокзал Горловка', addr: 'г. Горловка, ул. Станционная, 1', coords: [48.324510, 38.051230], icon: 'islands#nightDotIcon' }
-              ];
-
-              popularPoints.forEach(function(pt) {
-                var mark = new ymaps.Placemark(pt.coords, {
-                  hintContent: '<strong>' + pt.name + '</strong><br/>' + pt.addr + '<br/><span style="color:#2D6A4F; font-size:11px;">Кликните для выбора адреса</span>',
-                  balloonContent: '<strong>' + pt.name + '</strong><br/>' + pt.addr
-                }, {
-                  preset: pt.icon
-                });
-
-                mark.events.add('click', function() {
-                  clientPlacemark.geometry.setCoordinates(pt.coords);
-                  if (mapAddressInput) mapAddressInput.value = pt.addr.replace(/^г\.?\s*Горловка,?\s*/gi, '');
-                  deliveryInfo.address = pt.addr;
-                  var coAddr = document.getElementById('co-selected-address-text');
-                  if (coAddr) coAddr.textContent = pt.addr;
-                  applyDeliveryInfoToSite();
-                  updateCheckoutAddressUI();
-                  checkCoordsZone(pt.coords, false);
-                });
-
-                myMap.geoObjects.add(mark);
-              });
-
-              clientPlacemark.events.add('dragend', function() {
-                var coords = clientPlacemark.geometry.getCoordinates();
-                checkCoordsZone(coords, true);
+              deliveryPlacemark.events.add('dragend', function() {
+                var coords = deliveryPlacemark.geometry.getCoordinates();
+                setDeliveryLocationAndAddress(coords);
               });
 
               myMap.events.add('click', function(e) {
                 var coords = e.get('coords');
-                clientPlacemark.geometry.setCoordinates(coords);
-                checkCoordsZone(coords, true);
+                setDeliveryLocationAndAddress(coords);
               });
 
               window.geocodeAndPanAddress = function(addrText) {
-                if (!addrText || addrText.length < 2 || typeof ymaps === 'undefined') return;
+                if (!addrText || addrText.length < 2) return;
                 var fullQuery = addrText.toLowerCase().indexOf('горловка') !== -1 ? addrText : ('г. Горловка, ' + addrText);
-                ymaps.geocode(fullQuery, { boundedBy: gorlovkaBounds, results: 1 }).then(function(res) {
-                  var firstGeo = res.geoObjects.get(0);
-                  if (firstGeo) {
-                    var coords = firstGeo.geometry.getCoordinates();
-                    var fullLine = firstGeo.getAddressLine();
-                    var shortName = firstGeo.properties.get('name') || fullLine;
-                    if (fullLine) {
-                      deliveryInfo.address = fullLine;
-                      if (mapAddressInput) mapAddressInput.value = shortName;
-                    }
-                    clientPlacemark.geometry.setCoordinates(coords);
-                    myMap.panTo(coords, { flying: true, duration: 600 });
-                    myMap.setZoom(16);
-                    checkCoordsZone(coords, false);
+
+                function onFoundCoords(coords, fullLine, shortName) {
+                  deliveryPlacemark.geometry.setCoordinates(coords);
+                  myMap.panTo(coords, { flying: true, duration: 600 });
+                  myMap.setZoom(16);
+                  checkCoordsZone(coords);
+                  if (fullLine) {
+                    deliveryInfo.address = fullLine;
+                    if (mapAddressInput) mapAddressInput.value = shortName || fullLine;
+                    var coAddr = document.getElementById('co-selected-address-text');
+                    if (coAddr) coAddr.textContent = fullLine;
                   }
-                });
+                  updateModalCalcView();
+                  applyDeliveryInfoToSite();
+                  updateCheckoutAddressUI();
+                }
+
+                if (typeof ymaps !== 'undefined' && ymaps.geocode) {
+                  ymaps.geocode(fullQuery, { boundedBy: gorlovkaBounds, results: 1 }).then(function(res) {
+                    var first = res && res.geoObjects && res.geoObjects.get(0);
+                    if (first) {
+                      onFoundCoords(first.geometry.getCoordinates(), first.getAddressLine(), first.properties.get('name'));
+                    } else {
+                      fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(fullQuery) + '&accept-language=ru&limit=1')
+                        .then(function(r) { return r.json(); })
+                        .then(function(data) {
+                          if (data && data[0]) {
+                            onFoundCoords([parseFloat(data[0].lat), parseFloat(data[0].lon)], data[0].display_name, data[0].name || addrText);
+                          }
+                        }).catch(function() {});
+                    }
+                  }).catch(function() {
+                    fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(fullQuery) + '&accept-language=ru&limit=1')
+                      .then(function(r) { return r.json(); })
+                      .then(function(data) {
+                        if (data && data[0]) {
+                          onFoundCoords([parseFloat(data[0].lat), parseFloat(data[0].lon)], data[0].display_name, data[0].name || addrText);
+                        }
+                      }).catch(function() {});
+                  });
+                }
               };
 
               // Official Native Yandex SuggestView
@@ -4199,6 +4240,24 @@ ${allCardsHtml}
         } else if (window.location.hash.indexOf('#catalog') === 0) {
           parseHashRoute();
         }
+
+        function hideAppPreloader() {
+          var p = document.getElementById('app-preloader');
+          if (p && !p.classList.contains('is-hidden')) {
+            p.classList.add('is-hidden');
+            setTimeout(function() {
+              if (p && p.parentNode) p.parentNode.removeChild(p);
+            }, 450);
+          }
+        }
+        if (document.readyState === 'complete') {
+          setTimeout(hideAppPreloader, 80);
+        } else {
+          window.addEventListener('load', function() {
+            setTimeout(hideAppPreloader, 80);
+          });
+        }
+        setTimeout(hideAppPreloader, 800);
 
         window.navigateToView = navigateToView;
         window.openCart = openCart;

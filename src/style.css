@@ -44,7 +44,6 @@ html {
   max-width: 100%;
   overflow-x: clip;
   scroll-behavior: smooth;
-  touch-action: manipulation;
   -webkit-text-size-adjust: 100%;
 }
 
@@ -111,7 +110,6 @@ body {
   width: 100%;
   max-width: 100%;
   overflow-x: clip;
-  touch-action: manipulation;
 }
 
 body.scroll-locked {
@@ -1217,9 +1215,9 @@ button:active,
   gap: 20px;
   padding: 8px 4px 16px;
   scrollbar-width: none;
-  touch-action: pan-y;
-  -webkit-overflow-scrolling: auto;
-  user-select: none;
+  touch-action: pan-x pan-y !important;
+  -webkit-overflow-scrolling: touch !important;
+  user-select: auto;
 }
 
 .category-hub-track::-webkit-scrollbar {
@@ -1693,9 +1691,9 @@ button:active,
   scroll-behavior: smooth;
   padding: 10px 4px 18px;
   scrollbar-width: none;
-  touch-action: pan-y;
-  -webkit-overflow-scrolling: auto;
-  user-select: none;
+  touch-action: pan-x pan-y !important;
+  -webkit-overflow-scrolling: touch !important;
+  user-select: auto;
 }
 
 .bestsellers-track::-webkit-scrollbar {
@@ -7121,3 +7119,57 @@ button:active,
     font-size: 20px;
   }
 }
+
+/* =========================================================
+   LUXURY BRAND APP PRELOADER (SMOOTH REFRESH & LOAD)
+   ========================================================= */
+.app-preloader {
+  position: fixed;
+  inset: 0;
+  background: #DFE9E2;
+  z-index: 9999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.38s cubic-bezier(0.2, 0.9, 0.3, 1), visibility 0.38s ease;
+  will-change: opacity, visibility;
+}
+
+.app-preloader.is-hidden {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+.app-preloader__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+}
+
+.app-preloader__logo {
+  width: 155px;
+  height: auto;
+  filter: drop-shadow(0 4px 16px rgba(20, 36, 26, 0.12));
+  animation: preloaderPulse 1.8s ease-in-out infinite;
+}
+
+.app-preloader__spinner {
+  width: 34px;
+  height: 34px;
+  border: 3px solid rgba(45, 106, 79, 0.18);
+  border-top-color: #2D6A4F;
+  border-radius: 50%;
+  animation: preloaderSpin 0.75s linear infinite;
+}
+
+@keyframes preloaderSpin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes preloaderPulse {
+  0%, 100% { transform: scale(1); opacity: 0.94; }
+  50% { transform: scale(1.05); opacity: 1; }
+}
+
