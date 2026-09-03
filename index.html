@@ -200,6 +200,7 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
           <div class="hero-showcase">
             <img src="./hero.png" alt="Цветочный Рай Горловка" class="hero-showcase__bg-img" />
             <div class="hero-showcase__overlay"></div>
+            <div class="hero-scroll-dim-overlay" id="hero-scroll-dim-overlay"></div>
             <div class="hero-showcase__content">
               <a href="#category-hub-section" class="hero-showcase__btn" id="btn-hero-action">Выбрать букет</a>
             </div>
@@ -8160,13 +8161,52 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
                   }
                 }
               }
+              updateHeroScrollDim();
               scrollTickActive = false;
             });
             scrollTickActive = true;
           }
         }
+
+        var heroDimOverlay = document.getElementById('hero-scroll-dim-overlay');
+        function updateHeroScrollDim() {
+          if (!heroDimOverlay) return;
+          if (window.innerWidth > 768) {
+            heroDimOverlay.style.opacity = '0';
+            return;
+          }
+          var sy = window.scrollY || window.pageYOffset || 0;
+          if (sy <= 4) {
+            heroDimOverlay.style.opacity = '0';
+          } else {
+            var progress = Math.min(1, sy / 220);
+            heroDimOverlay.style.opacity = (progress * 0.94).toFixed(2);
+          }
+        }
+
         window.addEventListener('scroll', onWindowScroll, { passive: true });
+        window.addEventListener('resize', updateHeroScrollDim);
         onWindowScroll();
+
+        // Instant tactile touch feedback on mobile
+        document.addEventListener('touchstart', function(e) {
+          var target = e.target.closest('.hub-cell, .hub-cell__more-btn, .hub-card__header, .ribbon-btn, .bestsellers-tab-btn, .btn-primary, .btn-secondary, .modal-btn-cart, .modal-btn-buynow, .modal-size-chip, .modal-btn-fav, .mobile-nav-item, .bestseller-card, .product-card, .btn-buy, .header-icon-btn');
+          if (target) {
+            target.classList.add('touch-active');
+          }
+        }, { passive: true });
+
+        document.addEventListener('touchend', function() {
+          document.querySelectorAll('.touch-active').forEach(function(el) {
+            el.classList.remove('touch-active');
+          });
+        }, { passive: true });
+
+        document.addEventListener('touchcancel', function() {
+          document.querySelectorAll('.touch-active').forEach(function(el) {
+            el.classList.remove('touch-active');
+          });
+        }, { passive: true });
 
         // --- 5. Hub Panels & Bestsellers Navigation ---
         var hubTrack = document.getElementById('category-hub-track');
@@ -8190,36 +8230,35 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
           if (cards.length === 0) return;
 
           var maxScroll = Math.max(0, trackEl.scrollWidth - trackEl.clientWidth);
-          var current = (typeof trackEl._targetScroll === 'number') ? trackEl._targetScroll : trackEl.scrollLeft;
+          if (maxScroll <= 0) return;
 
-          if (Math.abs(trackEl.scrollLeft - current) > (cards[0].offsetWidth * 1.5)) {
-            current = trackEl.scrollLeft;
-          }
+          var current = (typeof trackEl._targetScroll === 'number' && !trackEl._manualScroll) ? trackEl._targetScroll : trackEl.scrollLeft;
+          trackEl._manualScroll = false;
 
-          var step = cards[0].offsetWidth + 18;
+          var cardStep = cards[0].offsetWidth + (cards.length > 1 ? Math.max(12, cards[1].offsetLeft - cards[0].offsetLeft - cards[0].offsetWidth) : 18);
           var target = current;
 
           if (direction > 0) {
             for (var i = 0; i < cards.length; i++) {
-              var left = cards[i].offsetLeft - trackEl.offsetLeft;
+              var left = cards[i].offsetLeft;
               if (left > current + 15) {
                 target = left;
                 break;
               }
             }
             if (target === current) {
-              target = Math.min(maxScroll, current + step);
+              target = Math.min(maxScroll, current + cardStep);
             }
           } else {
             for (var i = cards.length - 1; i >= 0; i--) {
-              var left = cards[i].offsetLeft - trackEl.offsetLeft;
+              var left = cards[i].offsetLeft;
               if (left < current - 15) {
                 target = left;
                 break;
               }
             }
             if (target === current) {
-              target = Math.max(0, current - step);
+              target = Math.max(0, current - cardStep);
             }
           }
 
@@ -8230,7 +8269,7 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
           clearTimeout(trackEl._scrollTimer);
           trackEl._scrollTimer = setTimeout(function() {
             trackEl._targetScroll = trackEl.scrollLeft;
-          }, 450);
+          }, 500);
         }
 
         if (hubTrack && btnHubPrev && btnHubNext) {

@@ -42,6 +42,7 @@ html {
   height: 100%;
   width: 100%;
   max-width: 100%;
+  overflow-x: clip;
   scroll-behavior: smooth;
   touch-action: manipulation;
   -webkit-text-size-adjust: 100%;
@@ -109,6 +110,7 @@ body {
   flex-direction: column;
   width: 100%;
   max-width: 100%;
+  overflow-x: clip;
   touch-action: manipulation;
 }
 
@@ -1195,24 +1197,23 @@ button:active,
 }
 
 .hub-nav-arrow.prev {
-  left: -20px;
+  left: -8px;
 }
 
 .hub-nav-arrow.next {
-  right: -20px;
+  right: -8px;
 }
 
 .hub-nav-arrow:hover {
   background: var(--color-primary);
   border-color: var(--color-primary);
   color: #FFFFFF;
-  transform: translateY(-50%) scale(1.1);
+  transform: translateY(-50%) scale(1.05);
 }
 
 .category-hub-track {
   display: flex;
   overflow-x: auto;
-  scroll-snap-type: x mandatory;
   gap: 20px;
   padding: 8px 4px 16px;
   scrollbar-width: none;
@@ -1406,6 +1407,21 @@ button:active,
   border-color: var(--color-primary);
   transform: translateY(-2px);
   box-shadow: 0 4px 14px rgba(45, 106, 79, 0.12);
+}
+
+.hub-cell:active,
+.hub-cell.touch-active,
+.hub-cell__more-btn:active,
+.hub-cell__more-btn.touch-active,
+.hub-card__header:active,
+.hub-card__header.touch-active,
+.ribbon-btn:active,
+.ribbon-btn.touch-active,
+.bestsellers-tab-btn:active,
+.bestsellers-tab-btn.touch-active {
+  transform: scale(0.94) !important;
+  opacity: 0.88 !important;
+  transition-duration: 0.08s !important;
 }
 
 /* =========================================================
@@ -1657,18 +1673,18 @@ button:active,
 }
 
 .floating-carousel-arrow.prev {
-  left: -20px;
+  left: -8px;
 }
 
 .floating-carousel-arrow.next {
-  right: -20px;
+  right: -8px;
 }
 
 .floating-carousel-arrow:hover {
   background: var(--color-primary);
   border-color: var(--color-primary);
   color: #FFFFFF;
-  transform: translateY(-50%) scale(1.08);
+  transform: translateY(-50%) scale(1.05);
 }
 
 .bestsellers-track {
@@ -1676,7 +1692,6 @@ button:active,
   gap: 18px;
   overflow-x: auto;
   scroll-behavior: smooth;
-  scroll-snap-type: x mandatory;
   padding: 10px 4px 18px;
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -1829,15 +1844,19 @@ button:active,
 }
 
 .card-price-badge {
-  background: #F1F4F2;
-  color: #14241A;
-  font-size: clamp(15px, 1.3vw, 18px);
+  font-size: clamp(13.5px, 1.1vw, 15px);
   font-weight: 800;
-  padding: 5px 12px;
-  border-radius: 999px;
+  color: #FFFFFF;
+  background: linear-gradient(135deg, #2D6A4F 0%, #1B4D36 100%);
+  padding: 4px 11px;
+  border-radius: 9px;
+  box-shadow: 0 3px 8px rgba(27, 77, 54, 0.22);
+  letter-spacing: 0.01em;
   white-space: nowrap;
-  letter-spacing: -0.02em;
-  border: 1px solid #E2ECE5;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1.2;
+  border: none;
 }
 
 @media (max-width: 480px) {
@@ -2559,7 +2578,18 @@ button:active,
   }
 
   .hero-showcase__overlay {
-    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.02) 0%, rgba(0, 0, 0, 0.08) 40%, rgba(10, 24, 16, 0.72) 100%);
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0) 40%, rgba(0, 0, 0, 0.12) 100%) !important;
+  }
+
+  .hero-scroll-dim-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(10, 32, 20, 0.95) 0%, rgba(12, 38, 24, 0.65) 45%, rgba(12, 38, 24, 0) 100%);
+    pointer-events: none;
+    z-index: 2;
+    opacity: 0;
+    transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: opacity;
   }
 
   .hero-showcase__btn {
@@ -5254,28 +5284,39 @@ button:active,
   .co-segment-btn,
   .header-icon-btn,
   .ribbon-btn,
-  .hub-card {
-    transition: transform 0.22s cubic-bezier(0.2, 0.9, 0.3, 1), box-shadow 0.22s ease, background-color 0.2s ease, opacity 0.2s ease !important;
+  .hub-card,
+  .hub-card__header,
+  .hub-cell,
+  .hub-cell__more-btn,
+  .bestsellers-tab-btn,
+  .btn-buy {
+    transition: transform 0.2s cubic-bezier(0.2, 0.9, 0.3, 1), box-shadow 0.2s ease, background-color 0.2s ease, opacity 0.2s ease !important;
     -webkit-tap-highlight-color: transparent !important;
   }
 
-  button:active,
-  a:active,
-  .btn-primary:active,
-  .btn-secondary:active,
-  .modal-btn-cart:active,
-  .modal-btn-buynow:active,
-  .modal-btn-buy-now:active,
-  .modal-size-chip:active,
-  .modal-btn-fav:active,
-  .modal-corner-badge-btn:active,
-  .mobile-nav-item:active,
-  .co-btn:active,
-  .co-segment-btn:active,
-  .header-icon-btn:active,
-  .ribbon-btn:active,
-  .hub-card:active {
-    transform: scale(0.95) !important;
+  button:active, button.touch-active,
+  a:active, a.touch-active,
+  .btn-primary:active, .btn-primary.touch-active,
+  .btn-secondary:active, .btn-secondary.touch-active,
+  .modal-btn-cart:active, .modal-btn-cart.touch-active,
+  .modal-btn-buynow:active, .modal-btn-buynow.touch-active,
+  .modal-btn-buy-now:active, .modal-btn-buy-now.touch-active,
+  .modal-size-chip:active, .modal-size-chip.touch-active,
+  .modal-btn-fav:active, .modal-btn-fav.touch-active,
+  .modal-corner-badge-btn:active, .modal-corner-badge-btn.touch-active,
+  .mobile-nav-item:active, .mobile-nav-item.touch-active,
+  .co-btn:active, .co-btn.touch-active,
+  .co-segment-btn:active, .co-segment-btn.touch-active,
+  .header-icon-btn:active, .header-icon-btn.touch-active,
+  .ribbon-btn:active, .ribbon-btn.touch-active,
+  .hub-card:active, .hub-card.touch-active,
+  .hub-card__header:active, .hub-card__header.touch-active,
+  .hub-cell:active, .hub-cell.touch-active,
+  .hub-cell__more-btn:active, .hub-cell__more-btn.touch-active,
+  .bestsellers-tab-btn:active, .bestsellers-tab-btn.touch-active,
+  .btn-buy:active, .btn-buy.touch-active {
+    transform: scale(0.94) !important;
+    opacity: 0.88 !important;
     transition-duration: 0.08s !important;
   }
 }
