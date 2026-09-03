@@ -1050,6 +1050,8 @@ button:active,
   z-index: 0;
   overflow: hidden;
   user-select: none;
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 .floral-decor-item {
@@ -1065,6 +1067,7 @@ button:active,
   .floral-decor-item {
     opacity: 0.14;
     max-width: 180px !important;
+    filter: none !important;
   }
 }
 
@@ -1251,9 +1254,8 @@ button:active,
 }
 
 .hub-card:hover {
-  transform: translateY(-3px);
-  border-color: var(--color-primary);
-  box-shadow: 0 8px 26px rgba(45, 106, 79, 0.14);
+  /* No transform or moving shadow on the panel itself */
+  border-color: rgba(45, 106, 79, 0.35);
 }
 
 .hub-card__header {
@@ -1407,18 +1409,18 @@ button:active,
 }
 
 .hub-cell:active,
-.hub-cell.touch-active,
 .hub-cell__more-btn:active,
+.bestsellers-tab-btn:active {
+  transform: scale(0.95);
+  opacity: 0.9;
+}
+
+.hub-cell.touch-active,
 .hub-cell__more-btn.touch-active,
-.hub-card__header:active,
-.hub-card__header.touch-active,
-.ribbon-btn:active,
 .ribbon-btn.touch-active,
-.bestsellers-tab-btn:active,
 .bestsellers-tab-btn.touch-active {
-  transform: scale(0.94) !important;
-  opacity: 0.88 !important;
-  transition-duration: 0.08s !important;
+  opacity: 0.82 !important;
+  filter: brightness(0.96) !important;
 }
 
 /* =========================================================
@@ -1724,6 +1726,11 @@ button:active,
   scroll-snap-align: start;
 }
 
+.product-card {
+  content-visibility: auto;
+  contain-intrinsic-size: 200px 320px;
+}
+
 .product-card,
 .bestseller-card {
   background: rgba(255, 255, 255, 0.70);
@@ -1737,8 +1744,7 @@ button:active,
   flex-direction: column;
   cursor: pointer;
   position: relative;
-  transition: transform 0.32s cubic-bezier(0.2, 0.9, 0.3, 1), box-shadow 0.32s cubic-bezier(0.2, 0.9, 0.3, 1), background-color 0.25s ease, border-color 0.25s ease;
-  will-change: transform;
+  transition: transform 0.28s cubic-bezier(0.2, 0.9, 0.3, 1), box-shadow 0.28s cubic-bezier(0.2, 0.9, 0.3, 1), background-color 0.25s ease, border-color 0.25s ease;
   user-select: none;
   box-sizing: border-box;
 }
@@ -2603,16 +2609,28 @@ button:active,
 
   /* Product Modal on Mobile */
   .product-modal-wrap {
-    padding: 24px 14px 20px !important;
+    padding: 16px 10px !important;
     align-items: center;
   }
 
   .product-modal-container {
-    max-height: 86vh !important;
+    width: 100% !important;
+    max-width: calc(100vw - 20px) !important;
+    max-height: 88vh !important;
     border-radius: 24px !important;
-    overflow: visible !important;
+    overflow: hidden !important;
     display: flex !important;
     flex-direction: column !important;
+    box-sizing: border-box !important;
+  }
+
+  .modal-corner-badge-btn {
+    top: 10px !important;
+    right: 10px !important;
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    min-height: 38px !important;
   }
 
   .modal-left-col {
@@ -2846,11 +2864,13 @@ button:active,
   }
 
   .hub-card {
-    flex: 0 0 86vw;
-    min-width: 275px;
-    max-width: 330px;
-    padding: 16px;
+    flex: 0 0 min(86vw, 330px);
+    width: min(86vw, 330px);
+    min-width: 240px;
+    max-width: calc(100vw - 28px);
+    padding: 14px;
     border-radius: 20px;
+    box-sizing: border-box;
   }
 
   .modal-img-perks {
@@ -4754,12 +4774,14 @@ button:active,
   }
 
   .hub-card {
-    flex: 0 0 88vw;
-    max-width: 350px;
-    min-width: 290px;
+    flex: 0 0 min(88vw, 350px);
+    width: min(88vw, 350px);
+    max-width: calc(100vw - 28px);
+    min-width: 240px;
     padding: 14px;
     border-radius: 20px;
     gap: 10px;
+    box-sizing: border-box;
   }
 
   .hub-card__title {
@@ -4863,17 +4885,17 @@ button:active,
     padding: 7px 7px 11px 7px !important;
     border-radius: 18px !important;
     overflow: hidden !important;
-    background: rgba(255, 255, 255, 0.70) !important;
-    backdrop-filter: blur(18px) saturate(180%) !important;
-    -webkit-backdrop-filter: blur(18px) saturate(180%) !important;
-    border: 1px solid rgba(255, 255, 255, 0.88) !important;
-    box-shadow: 0 8px 26px -6px rgba(18, 48, 30, 0.07), 0 3px 10px -3px rgba(18, 48, 30, 0.03) !important;
-    transition: transform 0.22s cubic-bezier(0.2, 0.9, 0.3, 1), box-shadow 0.22s ease !important;
+    background: rgba(255, 255, 255, 0.94) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1px solid rgba(255, 255, 255, 0.92) !important;
+    box-shadow: 0 6px 20px -4px rgba(18, 48, 30, 0.08), 0 2px 8px -2px rgba(18, 48, 30, 0.03) !important;
+    transition: box-shadow 0.2s ease, opacity 0.15s ease !important;
   }
 
   .bestseller-card:active,
   .product-card:active {
-    transform: scale(0.96) !important;
+    opacity: 0.88 !important;
   }
 
   .bestseller-card {
@@ -5339,16 +5361,18 @@ button:active,
   .co-btn:active, .co-btn.touch-active,
   .co-segment-btn:active, .co-segment-btn.touch-active,
   .header-icon-btn:active, .header-icon-btn.touch-active,
-  .ribbon-btn:active, .ribbon-btn.touch-active,
-  .hub-card:active, .hub-card.touch-active,
-  .hub-card__header:active, .hub-card__header.touch-active,
-  .hub-cell:active, .hub-cell.touch-active,
-  .hub-cell__more-btn:active, .hub-cell__more-btn.touch-active,
-  .bestsellers-tab-btn:active, .bestsellers-tab-btn.touch-active,
   .btn-buy:active, .btn-buy.touch-active {
     transform: scale(0.94) !important;
     opacity: 0.88 !important;
     transition-duration: 0.08s !important;
+  }
+
+  .ribbon-btn:active, .ribbon-btn.touch-active,
+  .hub-cell:active, .hub-cell.touch-active,
+  .hub-cell__more-btn:active, .hub-cell__more-btn.touch-active,
+  .bestsellers-tab-btn:active, .bestsellers-tab-btn.touch-active {
+    opacity: 0.82 !important;
+    filter: brightness(0.96) !important;
   }
 }
 
@@ -6859,9 +6883,32 @@ button:active,
     margin-bottom: 12px !important;
   }
 
+  .ribbon-nav-arrow {
+    display: none !important;
+  }
+
   .catalog-toolbar {
     margin-bottom: 14px !important;
     padding: 8px 12px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .card-bottom-row {
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+  }
+  .card-price-badge,
+  .bestseller-card__price,
+  .product-card__price {
+    font-size: 12px !important;
+    padding: 3px 7px !important;
+  }
+  .card-name,
+  .bestseller-card__title,
+  .product-card__title {
+    font-size: 11.5px !important;
+    min-height: 28px !important;
   }
 }
 

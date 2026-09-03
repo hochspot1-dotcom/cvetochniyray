@@ -5429,8 +5429,8 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
                   <div class="co-address-preview-card">
                     <div class="co-address-card-info">
                       <span class="co-address-badge-label">Адрес доставки в Горловке:</span>
-                      <div class="co-address-title" id="co-selected-address-text">Горловка, пр. Победы, 35</div>
-                      <div class="co-address-meta" id="co-selected-zone-text">
+                      <div class="co-address-title" id="co-selected-address-text" style="color: #6C8375;">Адрес доставки не выбран (выберите на карте или введите)</div>
+                      <div class="co-address-meta" id="co-selected-zone-text" style="display: none;">
                         <span class="co-zone-pill" id="co-zone-pill">Район: ЦГР</span>
                         <span class="co-price-pill" id="co-price-pill">Доставка: 250 ₽</span>
                         <span class="co-time-pill" id="co-time-pill">30–45 мин</span>
@@ -5556,7 +5556,6 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
                         <span class="co-pay-title">Картой онлайн / Перевод</span>
                         <span class="co-pay-desc">Сбербанк, ПСБ, Тинькофф, МИР</span>
                       </span>
-                      <span class="co-pay-check">✓</span>
                     </span>
                   </label>
 
@@ -5570,7 +5569,6 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
                         <span class="co-pay-title">СБП (QR-код)</span>
                         <span class="co-pay-desc">Моментальная оплата в любом банке</span>
                       </span>
-                      <span class="co-pay-check">✓</span>
                     </span>
                   </label>
 
@@ -5584,7 +5582,6 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
                         <span class="co-pay-title">Наличными при получении</span>
                         <span class="co-pay-desc">Курьеру или в магазине при самовывозе</span>
                       </span>
-                      <span class="co-pay-check">✓</span>
                     </span>
                   </label>
                 </div>
@@ -5636,7 +5633,7 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
                 </div>
                 <div class="co-totals-row">
                   <span>Доставка:</span>
-                  <span id="co-sum-delivery" style="font-weight: 700; color: #2D6A4F;">250 ₽</span>
+                  <span id="co-sum-delivery" style="font-weight: 700; color: #6C8375;">—</span>
                 </div>
                 <div class="co-totals-divider"></div>
                 <div class="co-totals-final-row">
@@ -5965,8 +5962,7 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
               <span>Закрыть</span>
             </button>
             <button class="btn-modal-confirm" id="btn-apply-address">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              <span id="btn-apply-text">Подтвердить адрес • 250 ₽</span>
+              <span id="btn-apply-text">Подтвердить адрес (250 ₽)</span>
             </button>
           </div>
         </div>
@@ -6093,7 +6089,7 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
               </div>
               <div class="modal-fulfill-text">
                 <div class="modal-fulfill-header"><strong style="color: #2D6A4F;">Самовывоз</strong> за 15–30 минут (ул. Пушкинская, 36а)</div>
-                <div class="modal-fulfill-sub">Ежедневно 08:00 – 20:00 • Бесплатно</div>
+                <div class="modal-fulfill-sub">Ежедневно 08:00 – 20:00 (Бесплатно)</div>
               </div>
             </div>
 
@@ -6695,7 +6691,7 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
             addToCart(buyId);
             var originalHtml = buyBtn.innerHTML;
             buyBtn.classList.add('is-added');
-            buyBtn.innerHTML = '<span>В корзине ✓</span>';
+            buyBtn.innerHTML = '<span>В корзине</span>';
             setTimeout(function() { buyBtn.classList.remove('is-added'); buyBtn.innerHTML = originalHtml; }, 1400);
           }
         });
@@ -6771,9 +6767,10 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
         }
 
         function applyDeliveryInfoToSite() {
+          deliveryInfo.isAddressChosen = true;
           var priceLabel = deliveryInfo.price === 0 ? 'Бесплатно' : deliveryInfo.price + ' ₽';
           if (headerAddressText) {
-            headerAddressText.innerHTML = '<strong>' + deliveryInfo.address + '</strong> • ' + priceLabel + ' (' + deliveryInfo.time + ')';
+            headerAddressText.innerHTML = '<strong>' + deliveryInfo.address + '</strong> (' + priceLabel + ', ' + deliveryInfo.time + ')';
           }
           if (timeValEl) timeValEl.textContent = deliveryInfo.time;
           document.querySelectorAll('.card-delivery-time').forEach(function(el) {
@@ -6789,9 +6786,9 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
           if (calcPriceText) calcPriceText.textContent = priceStr;
           if (calcTimeText) calcTimeText.textContent = deliveryInfo.time;
           if (calcZoneName) calcZoneName.textContent = deliveryInfo.district + ' (' + priceStr + ')';
-          if (clientPinTooltip) clientPinTooltip.textContent = deliveryInfo.address + ' • ' + priceStr;
+          if (clientPinTooltip) clientPinTooltip.textContent = deliveryInfo.address + ' (' + priceStr + ')';
           var btnApplyText = document.getElementById('btn-apply-text');
-          if (btnApplyText) btnApplyText.textContent = 'Подтвердить адрес • ' + priceStr;
+          if (btnApplyText) btnApplyText.textContent = 'Подтвердить адрес (' + priceStr + ')';
         }
 
         function pointInPolygon(point, vs) {
@@ -6807,7 +6804,7 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
         }
 
         var GORLOVKA_STREET_REGISTRY = [
-          // ЦГР (250 ₽)
+          // Центрально-Городской район (ЦГР, 250 ₽)
           { street: 'пр. Победы', dist: 'ЦГР', price: 250, time: '30 мин', coords: [48.3032, 38.0245] },
           { street: 'пр. Ленина', dist: 'ЦГР', price: 250, time: '30 мин', coords: [48.3078, 38.0163] },
           { street: 'ул. Пушкинская', dist: 'ЦГР', price: 250, time: '30 мин', coords: [48.3056, 38.0289] },
@@ -6854,20 +6851,34 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
           { street: 'ул. Кузнецова-Зубарева', dist: 'ЦГР', price: 250, time: '30 мин', coords: [48.3038, 38.0282] },
           { street: 'ул. Менделеева', dist: 'ЦГР', price: 250, time: '30 мин', coords: [48.3086, 38.0320] },
           { street: 'ул. Ломоносова', dist: 'ЦГР', price: 250, time: '30 мин', coords: [48.3094, 38.0335] },
+          { street: 'ул. Комсомольская', dist: 'ЦГР', price: 250, time: '30 мин', coords: [48.3040, 38.0150] },
+          { street: 'ул. Герцена', dist: 'ЦГР', price: 250, time: '30 мин', coords: [48.3070, 38.0130] },
+          { street: 'ул. Декабристов', dist: 'ЦГР', price: 250, time: '30 мин', coords: [48.3080, 38.0120] },
+          { street: 'ул. Семашко', dist: 'ЦГР', price: 250, time: '30 мин', coords: [48.3060, 38.0110] },
+          { street: 'ул. Ухтомского', dist: 'ЦГР', price: 250, time: '30 мин', coords: [48.3050, 38.0100] },
+          { street: 'ул. Мичурина', dist: 'ЦГР', price: 250, time: '30 мин', coords: [48.3090, 38.0105] },
+          { street: 'ул. Челюскинцев', dist: 'ЦГР', price: 250, time: '30 мин', coords: [48.3030, 38.0115] },
+          { street: 'ул. Радищева', dist: 'ЦГР', price: 250, time: '30 мин', coords: [48.3020, 38.0125] },
+          { street: 'ул. Патона', dist: 'ЦГР', price: 250, time: '30 мин', coords: [48.3010, 38.0135] },
+          { street: 'ул. Пионерская', dist: 'ЦГР', price: 250, time: '30 мин', coords: [48.3045, 38.0200] },
+          { street: 'ул. Школьная', dist: 'ЦГР', price: 250, time: '30 мин', coords: [48.3035, 38.0225] },
+          { street: 'ул. Больничная', dist: 'ЦГР', price: 250, time: '30 мин', coords: [48.3055, 38.0245] },
           { street: 'Театральная площадь', dist: 'ЦГР', price: 250, time: '30 мин', coords: [48.3050, 38.0240] },
           { street: 'пл. Ленина', dist: 'ЦГР', price: 250, time: '30 мин', coords: [48.3070, 38.0170] },
           { street: 'пл. Победы', dist: 'ЦГР', price: 250, time: '30 мин', coords: [48.3030, 38.0250] },
 
-          // Короленко (300 ₽)
+          // Короленко и 245-й квартал (300 ₽)
           { street: 'ул. Короленко', dist: 'Короленко', price: 300, time: '30 мин', coords: [48.2920, 38.0350] },
+          { street: '245-й квартал', dist: 'Короленко', price: 300, time: '30 мин', coords: [48.2945, 38.0390] },
           { street: 'ул. Минина и Пожарского', dist: 'Короленко', price: 300, time: '30 мин', coords: [48.2950, 38.0380] },
           { street: 'ул. Братьев Мазиковых', dist: 'Короленко', price: 300, time: '30 мин', coords: [48.2910, 38.0320] },
           { street: 'ул. Олега Кошевого', dist: 'Короленко', price: 300, time: '30 мин', coords: [48.2940, 38.0310] },
           { street: 'ул. Спартака', dist: 'Короленко', price: 300, time: '30 мин', coords: [48.2930, 38.0360] },
           { street: 'ул. Тимирязева', dist: 'Короленко', price: 300, time: '30 мин', coords: [48.2960, 38.0340] },
-          { street: '245-й квартал', dist: 'Короленко', price: 300, time: '30 мин', coords: [48.2945, 38.0390] },
           { street: 'ул. Соколовского', dist: 'Короленко', price: 300, time: '30 мин', coords: [48.2970, 38.0370] },
           { street: 'ул. Белорусская', dist: 'Короленко', price: 300, time: '30 мин', coords: [48.2905, 38.0340] },
+          { street: 'ул. Гречко', dist: 'Короленко', price: 300, time: '30 мин', coords: [48.2935, 38.0385] },
+          { street: 'ул. Грибоедова', dist: 'Короленко', price: 300, time: '30 мин', coords: [48.2915, 38.0365] },
 
           // пос. Победы (300 ₽)
           { street: 'пос. Победы', dist: 'пос. Победы', price: 300, time: '30 мин', coords: [48.2880, 38.0150] },
@@ -6876,61 +6887,76 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
           { street: 'ул. Матросова', dist: 'пос. Победы', price: 300, time: '30 мин', coords: [48.2860, 38.0180] },
           { street: 'ул. 25-летия Октября', dist: 'пос. Победы', price: 300, time: '30 мин', coords: [48.2875, 38.0195] },
 
-          // Северная проходная (300 ₽)
+          // Северная проходная и ж/д станция (300 ₽)
           { street: 'Северная проходная', dist: 'Северная проходная', price: 300, time: '40 мин', coords: [48.3220, 38.0260] },
           { street: 'ул. Железнодорожная', dist: 'Северная проходная', price: 300, time: '40 мин', coords: [48.3200, 38.0240] },
           { street: 'ул. Станционная', dist: 'Северная проходная', price: 300, time: '40 мин', coords: [48.3240, 38.0280] },
+          { street: 'ул. Вокзальная', dist: 'Северная проходная', price: 300, time: '40 мин', coords: [48.3210, 38.0250] },
 
-          // 88-й квартал (330 ₽)
+          // 88-й квартал и ж/м Солнечный (330 ₽)
           { street: '88-й квартал', dist: '88-й квартал', price: 330, time: '40 мин', coords: [48.3180, 38.0460] },
           { street: 'ул. Академика Павлова', dist: '88-й квартал', price: 330, time: '40 мин', coords: [48.3160, 38.0430] },
           { street: 'ул. Пересыпкина', dist: '88-й квартал', price: 330, time: '40 мин', coords: [48.3190, 38.0480] },
           { street: 'ул. Великан', dist: '88-й квартал', price: 330, time: '40 мин', coords: [48.3210, 38.0450] },
+          { street: 'ж/м Солнечный', dist: '88-й квартал', price: 330, time: '40 мин', coords: [48.3170, 38.0490] },
+          { street: 'ул. Пражская', dist: '88-й квартал', price: 330, time: '40 мин', coords: [48.3200, 38.0470] },
+          { street: 'ул. Магистральная', dist: '88-й квартал', price: 330, time: '40 мин', coords: [48.3150, 38.0450] },
 
           // Кочегарка (330 ₽)
           { street: 'пос. ш. Кочегарка', dist: 'Кочегарка', price: 330, time: '40 мин', coords: [48.3140, 37.9950] },
           { street: 'ул. Багратиона', dist: 'Кочегарка', price: 330, time: '40 мин', coords: [48.3120, 37.9980] },
           { street: 'ул. Запорожская', dist: 'Кочегарка', price: 330, time: '40 мин', coords: [48.3150, 37.9920] },
+          { street: 'ул. Нахимова', dist: 'Кочегарка', price: 330, time: '40 мин', coords: [48.3130, 37.9940] },
 
           // Майский (330 ₽)
           { street: 'пос. Майский', dist: 'Майский', price: 330, time: '30 мин', coords: [48.2980, 38.0580] },
           { street: 'ул. Майская', dist: 'Майский', price: 330, time: '30 мин', coords: [48.2970, 38.0560] },
           { street: 'ул. Белинского', dist: 'Майский', price: 330, time: '30 мин', coords: [48.2990, 38.0590] },
           { street: 'ул. Светлая', dist: 'Майский', price: 330, time: '30 мин', coords: [48.2960, 38.0610] },
+          { street: 'ул. Добролюбова', dist: 'Майский', price: 330, time: '30 мин', coords: [48.2950, 38.0570] },
 
           // Строитель (350 ₽)
           { street: 'ж/м Строителей', dist: 'Строитель', price: 350, time: '40 мин', coords: [48.3280, 37.9620] },
           { street: 'ул. Оленина', dist: 'Строитель', price: 350, time: '40 мин', coords: [48.3290, 37.9640] },
           { street: 'ул. Жукова', dist: 'Строитель', price: 350, time: '40 мин', coords: [48.3270, 37.9600] },
+          { street: 'ул. Маршала Жукова', dist: 'Строитель', price: 350, time: '40 мин', coords: [48.3270, 37.9600] },
           { street: 'ул. Ленина (Строитель)', dist: 'Строитель', price: 350, time: '40 мин', coords: [48.3260, 37.9650] },
+          { street: 'ул. Моисеенко', dist: 'Строитель', price: 350, time: '40 мин', coords: [48.3250, 37.9680] },
+          { street: 'ул. Врубеля', dist: 'Строитель', price: 350, time: '40 мин', coords: [48.3275, 37.9630] },
 
           // 5-й квартал (400 ₽)
           { street: '5-й квартал', dist: '5-й квартал', price: 400, time: '40 мин', coords: [48.3310, 38.0380] },
           { street: 'ул. Горловской Дивизии', dist: '5-й квартал', price: 400, time: '40 мин', coords: [48.3300, 38.0350] },
           { street: 'ул. Марии Батраковой', dist: '5-й квартал', price: 400, time: '40 мин', coords: [48.3320, 38.0400] },
+          { street: 'ул. Корчагина', dist: '5-й квартал', price: 400, time: '40 мин', coords: [48.3315, 38.0370] },
 
           // Новогорловка (400 ₽)
           { street: 'Новогорловка', dist: 'Новогорловка', price: 400, time: '40 мин', coords: [48.3120, 38.0850] },
           { street: 'ул. Харьковская', dist: 'Новогорловка', price: 400, time: '40 мин', coords: [48.3140, 38.0880] },
           { street: 'ул. Потемкина', dist: 'Новогорловка', price: 400, time: '40 мин', coords: [48.3100, 38.0820] },
+          { street: 'ул. Фурманова', dist: 'Новогорловка', price: 400, time: '40 мин', coords: [48.3130, 38.0860] },
 
           // Аксёновка (400 ₽)
           { street: 'пос. Аксёновка', dist: 'Аксёновка', price: 400, time: '40 мин', coords: [48.2820, 38.0480] },
           { street: 'ул. Чехова', dist: 'Аксёновка', price: 400, time: '40 мин', coords: [48.2830, 38.0500] },
+          { street: 'ул. Котовского', dist: 'Аксёновка', price: 400, time: '40 мин', coords: [48.2810, 38.0470] },
 
           // пос. Кирова (450 ₽)
           { street: 'пос. Кирова', dist: 'пос. Кирова', price: 450, time: '40 мин', coords: [48.2860, 37.9780] },
           { street: 'ул. Куйбышева', dist: 'пос. Кирова', price: 450, time: '40 мин', coords: [48.2870, 37.9800] },
           { street: 'ул. Фрунзе', dist: 'пос. Кирова', price: 450, time: '40 мин', coords: [48.2850, 37.9760] },
+          { street: 'ул. Щербакова', dist: 'пос. Кирова', price: 450, time: '40 мин', coords: [48.2840, 37.9790] },
 
           // Пятая шахта (450 ₽)
           { street: 'пос. 5-я шахта', dist: 'Пятая шахта', price: 450, time: '40 мин', coords: [48.2720, 38.0050] },
           { street: 'ул. Горловская', dist: 'Пятая шахта', price: 450, time: '40 мин', coords: [48.2730, 38.0070] },
           { street: 'ул. Шахтерская', dist: 'Пятая шахта', price: 450, time: '40 мин', coords: [48.2710, 38.0030] },
+          { street: 'ул. Ушинского', dist: 'Пятая шахта', price: 450, time: '40 мин', coords: [48.2740, 38.0040] },
 
           // Финский (450 ₽)
           { street: 'пос. Финский', dist: 'Финский', price: 450, time: '50 мин', coords: [48.3380, 38.0650] },
           { street: 'ул. Финская', dist: 'Финский', price: 450, time: '50 мин', coords: [48.3390, 38.0670] },
+          { street: 'ул. Краснодонская', dist: 'Финский', price: 450, time: '50 мин', coords: [48.3370, 38.0640] },
 
           // Озеряновка (450 ₽)
           { street: 'пос. Озеряновка', dist: 'Озеряновка', price: 450, time: '40 мин', coords: [48.2420, 37.9820] },
@@ -6940,15 +6966,19 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
           // Румянцево (470 ₽)
           { street: 'пос. Румянцево', dist: 'Румянцево', price: 470, time: '50 мин', coords: [48.3420, 38.0120] },
           { street: 'ул. Румянцева', dist: 'Румянцево', price: 470, time: '50 мин', coords: [48.3430, 38.0140] },
+          { street: 'ул. Бойко', dist: 'Румянцево', price: 470, time: '50 мин', coords: [48.3410, 38.0100] },
 
           // Мирный (480 ₽)
           { street: 'пос. Мирный', dist: 'Мирный', price: 480, time: '40 мин', coords: [48.2650, 38.0620] },
           { street: 'ул. Мира', dist: 'Мирный', price: 480, time: '40 мин', coords: [48.2660, 38.0640] },
+          { street: 'ул. Дружбы', dist: 'Мирный', price: 480, time: '40 мин', coords: [48.2640, 38.0610] },
 
           // Комсомолец (500 ₽)
           { street: 'пос. Комсомолец', dist: 'Комсомолец', price: 500, time: '45 мин', coords: [48.3450, 37.9350] },
+          { street: 'ж/м Комсомолец', dist: 'Комсомолец', price: 500, time: '45 мин', coords: [48.3450, 37.9350] },
           { street: 'ул. 60 лет СССР', dist: 'Комсомолец', price: 500, time: '45 мин', coords: [48.3460, 37.9370] },
           { street: 'ул. Есенина', dist: 'Комсомолец', price: 500, time: '45 мин', coords: [48.3440, 37.9330] },
+          { street: 'ул. Ртутная', dist: 'Комсомолец', price: 500, time: '45 мин', coords: [48.3470, 37.9380] },
 
           // Семидорожки (520 ₽)
           { street: 'пос. Семидорожки', dist: 'Семидорожки', price: 520, time: '50 мин', coords: [48.2480, 38.0420] },
@@ -6966,6 +6996,14 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
           { street: 'пос. Воробьёвка', dist: 'Воробьёвка', price: 650, time: '60 мин', coords: [48.3620, 38.0450] },
           { street: 'ул. Воробьевская', dist: 'Воробьёвка', price: 650, time: '60 мин', coords: [48.3630, 38.0470] },
 
+          // Бессарабка (650 ₽)
+          { street: 'пос. Бессарабка', dist: 'Северная проходная', price: 550, time: '50 мин', coords: [48.3400, 37.9850] },
+          { street: 'ул. Вознесенского', dist: 'Северная проходная', price: 550, time: '50 мин', coords: [48.3410, 37.9870] },
+
+          // Кондратьевка (650 ₽)
+          { street: 'пос. Кондратьевка', dist: 'Пригород Горловки', price: 650, time: '60 мин', coords: [48.3350, 38.1500] },
+          { street: 'ул. Остапенко', dist: 'Пригород Горловки', price: 650, time: '60 мин', coords: [48.3360, 38.1520] },
+
           // Михайловка (750 ₽)
           { street: 'пос. Михайловка', dist: 'Михайловка (дачи)', price: 750, time: '50 мин', coords: [48.2250, 37.9450] },
 
@@ -6973,7 +7011,9 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
           { street: 'пос. Пантелеймоновка', dist: 'Пригород Горловки', price: 650, time: '60 мин', coords: [48.2050, 37.9400] },
           { street: 'пос. Гольмовский', dist: 'Пригород Горловки', price: 650, time: '60 мин', coords: [48.3980, 38.0820] },
           { street: 'пос. Зайцево', dist: 'Пригород Горловки', price: 650, time: '60 мин', coords: [48.3850, 38.0050] },
-          { street: 'пос. Никитовка', dist: 'Северная проходная', price: 550, time: '50 мин', coords: [48.3550, 38.0120] }
+          { street: 'пос. Никитовка', dist: 'Северная проходная', price: 550, time: '50 мин', coords: [48.3550, 38.0120] },
+          { street: 'ст. Никитовка', dist: 'Северная проходная', price: 550, time: '50 мин', coords: [48.3560, 38.0130] },
+          { street: 'пос. Широкая Балка', dist: 'Пригород Горловки', price: 650, time: '60 мин', coords: [48.2600, 37.9200] }
         ];
 
         var suggestDebounce = null;
@@ -7059,12 +7099,35 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
                 price: item.price,
                 time: item.time,
                 coords: item.coords,
-                meta: item.dist + ' • ' + item.price + ' ₽ (' + item.time + ')'
+                meta: item.dist + ' (' + item.price + ' ₽, ' + item.time + ')'
               });
             }
           });
-          return results.slice(0, 8);
+          return results.slice(0, 10);
         }
+
+        function getZoneForCoords(coords) {
+          if (!coords || isNaN(coords[0]) || isNaN(coords[1])) {
+            return { dist: 'ЦГР', price: 250, time: '30 мин' };
+          }
+          var zones = window.GORLOVKA_DELIVERY_ZONES || [];
+          for (var i = 0; i < zones.length; i++) {
+            if (pointInPolygon(coords, zones[i].coords)) {
+              return {
+                dist: zones[i].name,
+                price: zones[i].price,
+                time: zones[i].time + ' мин'
+              };
+            }
+          }
+          return {
+            dist: 'Пригород Горловки',
+            price: 650,
+            time: '60 мин'
+          };
+        }
+
+        var activeNominatimAbort = null;
 
         function doSearchGorlovkaAddresses(val) {
           if (!val || val.trim().length < 2) {
@@ -7072,47 +7135,85 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
             return;
           }
 
-          if (typeof ymaps !== 'undefined' && ymaps.suggest) {
-            var fullQuery = val.toLowerCase().indexOf('горловка') !== -1 ? val : ('Горловка, ' + val);
-            ymaps.suggest(fullQuery, { boundedBy: gorlovkaBounds, results: 8 }).then(function(items) {
-              if (!items || items.length === 0) {
-                var local = findLocalStreetMatches(val);
-                if (local.length > 0) renderSuggestions(local);
-                else if (addressSuggestions) addressSuggestions.style.display = 'none';
-                return;
-              }
+          var local = findLocalStreetMatches(val);
+          if (local.length > 0) {
+            renderSuggestions(local);
+          }
 
-              var list = items.map(function(it) {
-                var displayName = it.value || '';
-                var cleanTitle = displayName
-                  .replace(/Донецкая Народная Республика[^,]*,s*/gi, '')
-                  .replace(/ДНР[^,]*,s*/gi, '')
-                  .replace(/Донецкая обл[^,]*,s*/gi, '')
-                  .replace(/г.?s*Горловка,s*/gi, '')
-                  .replace(/Горловка,s*/gi, '')
+          // Abort prior in-flight fetch
+          if (activeNominatimAbort) {
+            try { activeNominatimAbort.abort(); } catch(e) {}
+          }
+          var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+          activeNominatimAbort = controller;
+
+          var cleanVal = val
+            .replace(/г\.?\s*горловка,?\s*/gi, '')
+            .replace(/горловка,?\s*/gi, '')
+            .trim();
+          if (!cleanVal) return;
+
+          var nomUrl = 'https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent('Горловка ' + cleanVal) + '&format=json&accept-language=ru&limit=10&viewbox=37.85,48.45,38.25,48.20';
+
+          fetch(nomUrl, controller ? { signal: controller.signal } : {})
+            .then(function(res) { return res.json(); })
+            .then(function(items) {
+              if (!items || items.length === 0) return;
+
+              var nomList = items.map(function(it) {
+                var rawName = it.display_name || '';
+                var cleanTitle = rawName
+                  .replace(/Донецкая Народная Республика[^,]*[,]?[ ]*/gi, '')
+                  .replace(/ДНР[^,]*[,]?[ ]*/gi, '')
+                  .replace(/Донецкая область[^,]*[,]?[ ]*/gi, '')
+                  .replace(/Горловская городская община[^,]*[,]?[ ]*/gi, '')
+                  .replace(/Горловский район[^,]*[,]?[ ]*/gi, '')
+                  .replace(/Украина[^,]*/gi, '')
+                  .replace(/[0-9]{5}[,]?[ ]*/g, '')
+                  .replace(/г\.?\s*Горловка,\s*/gi, '')
+                  .replace(/Горловка,\s*/gi, '')
+                  .replace(/,\s*,/g, ',')
                   .trim();
-                if (!cleanTitle) cleanTitle = displayName;
+
+                if (cleanTitle.endsWith(',')) cleanTitle = cleanTitle.slice(0, -1).trim();
+                if (!cleanTitle) cleanTitle = rawName.split(',')[0];
+
+                var coords = [parseFloat(it.lat), parseFloat(it.lon)];
+                var zone = getZoneForCoords(coords);
 
                 return {
                   title: cleanTitle,
-                  full: displayName,
-                  dist: '',
-                  price: 0,
-                  time: '',
-                  coords: null,
-                  meta: 'Горловка'
+                  full: 'Горловка, ' + cleanTitle,
+                  dist: zone.dist,
+                  price: zone.price,
+                  time: zone.time,
+                  coords: coords,
+                  meta: zone.dist + ' (' + zone.price + ' ₽, ' + zone.time + ')'
                 };
+              }).filter(function(item) {
+                return item.coords && !isNaN(item.coords[0]) && !isNaN(item.coords[1]);
               });
 
-              renderSuggestions(list);
-            }).catch(function() {
-              var local = findLocalStreetMatches(val);
-              if (local.length > 0) renderSuggestions(local);
+              // Merge local results with Nominatim live results
+              var combined = local.slice();
+              var seen = {};
+              combined.forEach(function(c) { seen[c.title.toLowerCase()] = true; });
+
+              nomList.forEach(function(nom) {
+                var key = nom.title.toLowerCase();
+                if (!seen[key]) {
+                  seen[key] = true;
+                  combined.push(nom);
+                }
+              });
+
+              if (combined.length > 0) {
+                renderSuggestions(combined.slice(0, 10));
+              }
+            })
+            .catch(function(err) {
+              if (err && err.name === 'AbortError') return;
             });
-          } else {
-            var local = findLocalStreetMatches(val);
-            if (local.length > 0) renderSuggestions(local);
-          }
         }
 
 
@@ -7317,7 +7418,7 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
                 var coAddr = document.getElementById('co-selected-address-text');
                 if (coAddr) coAddr.textContent = finalFull;
 
-                deliveryPlacemark.properties.set('balloonContent', '<strong>' + finalShort + '</strong><br/><span style="color: #2D6A4F; font-size: 13px;">Доставка: ' + deliveryInfo.price + ' ₽ • ' + deliveryInfo.time + '</span>');
+                deliveryPlacemark.properties.set('balloonContent', '<strong>' + finalShort + '</strong><br/><span style="color: #2D6A4F; font-size: 13px;">Доставка: ' + deliveryInfo.price + ' ₽ (' + deliveryInfo.time + ')</span>');
                 deliveryPlacemark.balloon.open();
 
                 applyDeliveryInfoToSite();
@@ -7381,7 +7482,7 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
               // Add polygon delivery zones
               zonesData.forEach(function(zone) {
                 var polygon = new ymaps.Polygon([zone.coords], {
-                  hintContent: '<div style="padding: 4px 8px; font-family: sans-serif; font-size: 13px;"><strong>' + zone.name + '</strong><br/>Доставка: <strong style="color: #1B4D36;">' + zone.price + ' ₽</strong> • ' + zone.time + ' мин</div>'
+                  hintContent: '<div style="padding: 4px 8px; font-family: sans-serif; font-size: 13px;"><strong>' + zone.name + '</strong><br/>Доставка: <strong style="color: #1B4D36;">' + zone.price + ' ₽</strong> (' + zone.time + ' мин)</div>'
                 }, {
                   fillColor: zone.fillColor,
                   fillOpacity: 0.40,
@@ -7467,24 +7568,6 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
                   });
                 }
               };
-
-              // Official Native Yandex SuggestView
-              try {
-                if (typeof ymaps.SuggestView !== 'undefined' && mapAddressInput) {
-                  var suggestView = new ymaps.SuggestView('map-address-input', {
-                    boundedBy: gorlovkaBounds,
-                    results: 8
-                  });
-                  suggestView.events.add('select', function(e) {
-                    var item = e.get('item');
-                    if (item && item.value) {
-                      window.geocodeAndPanAddress(item.value);
-                    }
-                  });
-                }
-              } catch(sErr) {
-                console.warn('SuggestView init:', sErr);
-              }
             });
           } catch(err) {
             console.error('Yandex Maps error:', err);
@@ -7579,6 +7662,7 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
 
         function updateCheckoutAddressUI() {
           var addrTitle = document.getElementById('co-selected-address-text');
+          var zoneMeta = document.getElementById('co-selected-zone-text');
           var zonePill = document.getElementById('co-zone-pill');
           var pricePill = document.getElementById('co-price-pill');
           var timePill = document.getElementById('co-time-pill');
@@ -7592,13 +7676,32 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
           var coPrivate = document.getElementById('co-private-house-check');
           var coSubaddressGrid = document.getElementById('co-subaddress-grid');
 
+          var isPickup = currentDeliveryMethod === 'pickup';
+          var isAddressSelected = isPickup || (deliveryInfo && deliveryInfo.isAddressChosen && deliveryInfo.address);
+
           if (addrTitle) {
-            var fullDisplay = deliveryInfo.address || 'Горловка, пр. Победы, 35';
-            addrTitle.textContent = fullDisplay;
+            if (isPickup) {
+              addrTitle.textContent = 'г. Горловка, ул. Пушкинская, 36а';
+              addrTitle.style.color = '#14241A';
+            } else if (isAddressSelected) {
+              addrTitle.textContent = deliveryInfo.address;
+              addrTitle.style.color = '#14241A';
+            } else {
+              addrTitle.textContent = 'Адрес доставки не выбран (выберите на карте или введите)';
+              addrTitle.style.color = '#6C8375';
+            }
           }
-          if (zonePill) zonePill.textContent = 'Район: ' + (deliveryInfo.district || 'ЦГР');
-          if (pricePill) pricePill.textContent = 'Доставка: ' + (currentDeliveryMethod === 'pickup' ? '0 ₽ (Бесплатно)' : (deliveryInfo.price || 250) + ' ₽');
-          if (timePill) timePill.textContent = deliveryInfo.time || '30-45 мин';
+
+          // Hide district, price and delivery time until address is selected
+          if (zoneMeta) {
+            zoneMeta.style.display = isAddressSelected ? 'flex' : 'none';
+          }
+
+          if (isAddressSelected) {
+            if (zonePill) zonePill.textContent = isPickup ? 'Самовывоз: ЦГР' : ('Район: ' + (deliveryInfo.district || 'ЦГР'));
+            if (pricePill) pricePill.textContent = 'Доставка: ' + (isPickup ? '0 ₽ (Бесплатно)' : (deliveryInfo.price || 250) + ' ₽');
+            if (timePill) timePill.textContent = isPickup ? 'Ежедневно 08:00 – 20:00' : (deliveryInfo.time || '30-45 мин');
+          }
 
           if (coFlat && deliveryInfo.flat) coFlat.value = deliveryInfo.flat;
           if (coEntrance && deliveryInfo.entrance) coEntrance.value = deliveryInfo.entrance;
@@ -7651,7 +7754,9 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
             return sum + (pNum * qty);
           }, 0);
           var discount = promoDiscountPercent > 0 ? Math.round(subtotal * (promoDiscountPercent / 100)) : 0;
-          var deliveryCost = currentDeliveryMethod === 'pickup' ? 0 : (deliveryInfo.price || 250);
+          var isPickup = currentDeliveryMethod === 'pickup';
+          var isAddressSelected = isPickup || (deliveryInfo && deliveryInfo.isAddressChosen && deliveryInfo.address);
+          var deliveryCost = isPickup ? 0 : (isAddressSelected ? (deliveryInfo.price || 250) : 0);
           var finalTotal = Math.max(0, subtotal - discount) + deliveryCost;
 
           var subtotalEl = document.getElementById('co-sum-subtotal');
@@ -7664,12 +7769,20 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
           if (discountEl) discountEl.textContent = '-' + discount.toLocaleString('ru-RU') + ' ₽';
           if (discountRow) discountRow.style.display = discount > 0 ? 'flex' : 'none';
           if (deliveryEl) {
-            deliveryEl.textContent = deliveryCost === 0 ? 'Бесплатно (0 ₽)' : (deliveryCost.toLocaleString('ru-RU') + ' ₽');
-            deliveryEl.style.color = '#2D6A4F';
+            if (isPickup) {
+              deliveryEl.textContent = '0 ₽ (Бесплатно)';
+              deliveryEl.style.color = '#2D6A4F';
+            } else if (isAddressSelected) {
+              deliveryEl.textContent = deliveryCost.toLocaleString('ru-RU') + ' ₽';
+              deliveryEl.style.color = '#2D6A4F';
+            } else {
+              deliveryEl.textContent = '—';
+              deliveryEl.style.color = '#6C8375';
+            }
           }
           if (finalTotalEl) finalTotalEl.textContent = finalTotal.toLocaleString('ru-RU') + ' ₽';
           if (btnCoSubmitOrder) {
-            btnCoSubmitOrder.innerHTML = '<span>Подтвердить заказ • ' + finalTotal.toLocaleString('ru-RU') + ' ₽</span>';
+            btnCoSubmitOrder.innerHTML = '<span>Подтвердить заказ (' + finalTotal.toLocaleString('ru-RU') + ' ₽)</span>';
           }
         }
 
@@ -7933,13 +8046,13 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
             var code = coPromoInput.value.trim().toUpperCase();
             if (code === 'START5') {
               promoDiscountPercent = 5;
-              coPromoMsg.textContent = '✓ Промокод применен: скидка 5% на первый заказ!';
+              coPromoMsg.textContent = 'Промокод применен: скидка 5% на первый заказ!';
               coPromoMsg.style.display = 'block';
               coPromoMsg.style.color = '#2D6A4F';
               updateCheckoutTotals();
             } else if (code === 'ГОРЛОВКА10' || code === 'ЦВЕТЫ10' || code === 'РАЙ10' || code === '1234' || code === '1235') {
               promoDiscountPercent = 10;
-              coPromoMsg.textContent = '✓ Промокод применен: скидка 10% на ваш заказ!';
+              coPromoMsg.textContent = 'Промокод применен: скидка 10% на ваш заказ!';
               coPromoMsg.style.display = 'block';
               coPromoMsg.style.color = '#2D6A4F';
               updateCheckoutTotals();
@@ -7965,6 +8078,12 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
             if (!phoneEl || !phoneEl.value.trim()) {
               if (phoneEl) { phoneEl.focus(); phoneEl.style.borderColor = '#E03544'; }
               showToast('Пожалуйста, укажите ваш номер телефона');
+              return;
+            }
+
+            if (currentDeliveryMethod === 'courier' && (!deliveryInfo || !deliveryInfo.isAddressChosen || !deliveryInfo.address)) {
+              showToast('Пожалуйста, выберите адрес доставки на карте или введите его');
+              openAddressModal();
               return;
             }
 
@@ -8591,6 +8710,14 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
           pageRibbonTrack.addEventListener('scroll', updateRibbonArrowStates, { passive: true });
           window.addEventListener('resize', updateRibbonArrowStates);
           setTimeout(updateRibbonArrowStates, 100);
+
+          pageRibbonTrack.addEventListener('click', function(e) {
+            var btn = e.target.closest('.ribbon-btn');
+            if (!btn) return;
+            e.preventDefault();
+            var cat = btn.getAttribute('data-cat') || 'all';
+            navigateToView('catalog', cat, pageSearchInput ? pageSearchInput.value : '');
+          });
         }
 
 
@@ -8727,6 +8854,7 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
           closeCheckoutPage();
 
           if (viewName === 'catalog') {
+            var alreadyInCatalog = catalogView && catalogView.style.display === 'block';
             if (homeView) homeView.style.display = 'none';
             if (catalogView) catalogView.style.display = 'block';
 
@@ -8737,7 +8865,9 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
             }
 
             filterPageCatalog(currentActiveCategory, pageSearchInput ? pageSearchInput.value : '');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            if (!alreadyInCatalog) {
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
 
             setMobNavActive(mobNavCatalog);
 
@@ -8792,22 +8922,50 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
                          allCats.indexOf('композиц') !== -1 || cat.indexOf('свадеб') !== -1 || allCats.indexOf('свадеб') !== -1 ||
                          cat.indexOf('растен') !== -1 || allCats.indexOf('растен') !== -1 || cat.indexOf('сезон') !== -1 || allCats.indexOf('сезон') !== -1 ||
                          cat.indexOf('моно') !== -1 || cat.indexOf('wow') !== -1 || cat.indexOf('сухоцвет') !== -1;
-            } else if (cleanCat === 'оформление и декор мероприятий' || cleanCat.indexOf('декор мероприят') !== -1) {
-              catMatch = cat.indexOf('оформлен') !== -1 || allCats.indexOf('оформлен') !== -1 || titleLower.indexOf('арк') !== -1 || titleLower.indexOf('президиум') !== -1 || titleLower.indexOf('фотозон') !== -1;
-            } else if (cleanCat === 'подарки и декор' || cleanCat === 'подарки') {
-              catMatch = (cat.indexOf('подарк') !== -1 || allCats.indexOf('подарк') !== -1) && cat.indexOf('растен') === -1;
-            } else if (cleanCat === 'гелиевые шары' || cleanCat.indexOf('шар') !== -1) {
-              catMatch = cat.indexOf('шар') !== -1 || allCats.indexOf('шар') !== -1;
-            } else if (cleanCat === 'комнатные растения' || cleanCat.indexOf('растен') !== -1) {
-              catMatch = cat.indexOf('растен') !== -1 || allCats.indexOf('растен') !== -1;
-            } else if (cleanCat === 'сезонные композиции' || cleanCat.indexOf('сезон') !== -1) {
-              catMatch = cat.indexOf('сезон') !== -1 || allCats.indexOf('сезон') !== -1;
+            } else if (cleanCat.indexOf('моно') !== -1) {
+              catMatch = cat.indexOf('моно') !== -1 || allCats.indexOf('моно') !== -1 || titleLower.indexOf('моно') !== -1 || titleLower.indexOf('роз') !== -1;
+            } else if (cleanCat.indexOf('авторск') !== -1 || cleanCat.indexOf('размер m') !== -1) {
+              catMatch = cat.indexOf('сборн') !== -1 || allCats.indexOf('размер m') !== -1 || allCats.indexOf('сборн') !== -1 || titleLower.indexOf('автор') !== -1;
+            } else if (cleanCat.indexOf('классическ') !== -1 || cleanCat.indexOf('размер s') !== -1) {
+              catMatch = allCats.indexOf('размер s') !== -1 || cat.indexOf('размер s') !== -1 || allCats.indexOf('классич') !== -1;
+            } else if (cleanCat.indexOf('большие') !== -1 || cleanCat.indexOf('размер l') !== -1) {
+              catMatch = allCats.indexOf('размер l') !== -1 || cat.indexOf('размер l') !== -1 || allCats.indexOf('больш') !== -1;
+            } else if (cleanCat.indexOf('wow') !== -1) {
+              catMatch = cat.indexOf('wow') !== -1 || allCats.indexOf('wow') !== -1 || titleLower.indexOf('101') !== -1;
             } else if (cleanCat.indexOf('в коробках') !== -1) {
               catMatch = cat.indexOf('коробк') !== -1 || allCats.indexOf('коробк') !== -1 || titleLower.indexOf('коробк') !== -1;
             } else if (cleanCat.indexOf('в корзинках') !== -1 || cleanCat.indexOf('корзин') !== -1) {
               catMatch = cat.indexOf('корзин') !== -1 || allCats.indexOf('корзин') !== -1 || titleLower.indexOf('корзин') !== -1;
+            } else if (cleanCat.indexOf('невест') !== -1 || cleanCat.indexOf('свадеб') !== -1) {
+              catMatch = cat.indexOf('свадеб') !== -1 || allCats.indexOf('свадеб') !== -1 || allCats.indexOf('невест') !== -1 || cat.indexOf('невест') !== -1;
+            } else if (cleanCat.indexOf('ювелир') !== -1) {
+              catMatch = cat.indexOf('ювелир') !== -1 || allCats.indexOf('ювелир') !== -1;
+            } else if (cleanCat.indexOf('сухоцвет') !== -1) {
+              catMatch = cat.indexOf('сухоцвет') !== -1 || allCats.indexOf('сухоцвет') !== -1;
+            } else if (cleanCat.indexOf('сезон') !== -1) {
+              catMatch = cat.indexOf('сезон') !== -1 || allCats.indexOf('сезон') !== -1;
+            } else if (cleanCat.indexOf('растен') !== -1) {
+              catMatch = cat.indexOf('растен') !== -1 || allCats.indexOf('растен') !== -1;
+            } else if (cleanCat === 'оформление и декор мероприятий' || cleanCat.indexOf('декор мероприят') !== -1) {
+              catMatch = cat.indexOf('оформлен') !== -1 || allCats.indexOf('оформлен') !== -1 || titleLower.indexOf('арк') !== -1 || titleLower.indexOf('президиум') !== -1 || titleLower.indexOf('фотозон') !== -1;
+            } else if (cleanCat.indexOf('арк') !== -1) {
+              catMatch = titleLower.indexOf('арк') !== -1 || allCats.indexOf('арк') !== -1;
+            } else if (cleanCat.indexOf('президиум') !== -1) {
+              catMatch = titleLower.indexOf('президиум') !== -1 || titleLower.indexOf('стол') !== -1 || allCats.indexOf('президиум') !== -1;
+            } else if (cleanCat.indexOf('фотозон') !== -1) {
+              catMatch = titleLower.indexOf('фотозон') !== -1 || allCats.indexOf('фотозон') !== -1;
+            } else if (cleanCat === 'подарки и декор' || cleanCat === 'подарки') {
+              catMatch = (cat.indexOf('подарк') !== -1 || allCats.indexOf('подарк') !== -1) && cat.indexOf('растен') === -1;
             } else if (cleanCat.indexOf('игрушк') !== -1) {
               catMatch = titleLower.indexOf('мишка') !== -1 || titleLower.indexOf('зайка') !== -1 || titleLower.indexOf('гном') !== -1 || titleLower.indexOf('кукла') !== -1;
+            } else if (cleanCat.indexOf('набор') !== -1 && groupKey === 'gifts') {
+              catMatch = (cat.indexOf('набор') !== -1 || allCats.indexOf('набор') !== -1 || titleLower.indexOf('набор') !== -1 || titleLower.indexOf('бокс') !== -1) && cat.indexOf('шар') === -1;
+            } else if (cleanCat.indexOf('открытк') !== -1) {
+              catMatch = cat.indexOf('открытк') !== -1 || allCats.indexOf('открытк') !== -1 || titleLower.indexOf('открытк') !== -1;
+            } else if (cleanCat.indexOf('сувенир') !== -1) {
+              catMatch = cat.indexOf('сувенир') !== -1 || allCats.indexOf('сувенир') !== -1;
+            } else if (cleanCat === 'гелиевые шары' || cleanCat.indexOf('шар') !== -1) {
+              catMatch = cat.indexOf('шар') !== -1 || allCats.indexOf('шар') !== -1;
             } else {
               catMatch = cat.indexOf(cleanCat) !== -1 || allCats.indexOf(cleanCat) !== -1 || titleLower.indexOf(cleanCat) !== -1;
             }
@@ -9002,9 +9160,7 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
             closeCheckoutPage();
             closeFavoritesDrawer();
             closeCart();
-            navigateToView('catalog', 'Цветы');
-            var hub = document.getElementById('category-hub-section');
-            if (hub) hub.scrollIntoView({ behavior: 'smooth' });
+            navigateToView('catalog', 'all');
             setMobNavActive(mobNavCatalog);
           });
         }

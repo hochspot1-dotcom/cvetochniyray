@@ -208,6 +208,95 @@ server.listen(4178, async () => {
   });
   console.log('Mobile nav switch result:', mobileNavSwitch);
 
+  // 3. Test Mobile Category Switching & Dynamic Goods Update
+  console.log('\n--- Testing Mobile Category Buttons ---');
+  await page.evaluate(() => {
+    const mobCat = document.getElementById('mob-nav-catalog');
+    if (mobCat) mobCat.click();
+  });
+  await new Promise(r => setTimeout(r, 400));
+
+  const catSwitchResults = await page.evaluate(async () => {
+    const monoBtn = Array.from(document.querySelectorAll('.ribbon-btn')).find(b => b.getAttribute('data-cat') === 'Монобукеты');
+    if (monoBtn) monoBtn.click();
+    await new Promise(r => setTimeout(r, 300));
+    const monoCount = Array.from(document.querySelectorAll('#catalog-page-grid .product-card')).filter(c => c.style.display !== 'none').length;
+
+    const balloonBtn = Array.from(document.querySelectorAll('.ribbon-btn')).find(b => b.getAttribute('data-cat') === 'Гелиевые шары');
+    if (balloonBtn) balloonBtn.click();
+    await new Promise(r => setTimeout(r, 300));
+    const balloonCount = Array.from(document.querySelectorAll('#catalog-page-grid .product-card')).filter(c => c.style.display !== 'none').length;
+
+    return { monoCount, balloonCount };
+  });
+  console.log('Category switch result:', catSwitchResults);
+
+  // 4. Test Address Search Suggestions
+  console.log('\n--- Testing Address Search Suggestions ---');
+  await page.evaluate(() => {
+    const btn = document.getElementById('btn-header-address');
+    if (btn) btn.click();
+  });
+  await new Promise(r => setTimeout(r, 400));
+
+  const searchSuggestCheck = await page.evaluate(async () => {
+    const input = document.getElementById('map-address-input');
+    if (!input) return { error: 'input not found' };
+    input.value = 'Ленина 15';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    await new Promise(r => setTimeout(r, 400));
+    const suggests = Array.from(document.querySelectorAll('#address-suggestions .suggest-row'));
+    return {
+      count: suggests.length,
+      firstTitle: suggests[0]?.querySelector('.suggest-name')?.textContent,
+      firstMeta: suggests[0]?.querySelector('.suggest-meta')?.textContent
+    };
+  });
+  console.log('Address suggest result for "Ленина 15":', searchSuggestCheck);
+
+  // 5. Test Checkout Zone/Price Initial State
+  console.log('\n--- Testing Checkout Zone/Price Display Logic ---');
+  const checkoutState = await page.evaluate(async () => {
+    localStorage.removeItem('cvetov_address_info');
+    const closeBtn = document.getElementById('btn-close-address-modal');
+    if (closeBtn) closeBtn.click();
+    await new Promise(r => setTimeout(r, 200));
+
+    // Open checkout
+    const coBtn = document.getElementById('btn-cart-checkout');
+    if (coBtn) coBtn.click();
+    await new Promise(r => setTimeout(r, 300));
+
+    const zoneText = document.getElementById('co-selected-zone-text');
+    const addrText = document.getElementById('co-selected-address-text')?.textContent;
+    const deliverySum = document.getElementById('co-sum-delivery')?.textContent;
+    const submitBtn = document.getElementById('btn-co-submit-order')?.textContent;
+
+    return {
+      zoneDisplay: zoneText ? window.getComputedStyle(zoneText).display : 'null',
+      addrText,
+      deliverySum,
+      submitBtn
+    };
+  });
+  console.log('Checkout initial state:', checkoutState);
+
+  // 6. Test Buttons Cleanliness (no dots or checkmarks)
+  console.log('\n--- Testing Clean Buttons ---');
+  const buttonCleanliness = await page.evaluate(() => {
+    const allButtons = Array.from(document.querySelectorAll('button, .btn, .co-submit-btn, #btn-apply-address'));
+    const buttonsWithIssues = allButtons
+      .map(b => b.textContent.trim())
+      .filter(t => t.includes('•') || t.includes('✓'));
+    return {
+      totalButtons: allButtons.length,
+      buttonsWithIssues
+    };
+  });
+  console.log('Button cleanliness check:', buttonCleanliness);
+
+  await page.screenshot({ path: 'tests/mobile_verified.png' });
+
   console.log('\n=== All Issues Logged ===');
   console.log('Total issues:', issues.length);
   issues.forEach(i => console.log('  ', i));
