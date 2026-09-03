@@ -6428,17 +6428,16 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
         var btnFavAddAll = document.getElementById('btn-fav-add-all');
 
         function lockBodyScroll(locked) {
+          // On Desktop (width > 768px): NEVER touch body/html styles!
+          // Modals and drawers already have overscroll-behavior: contain.
+          // Touching body/html on desktop is what causes the background page to jump!
+          if (window.innerWidth > 768) {
+            return;
+          }
+
           if (locked) {
-            var scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-            if (scrollbarWidth > 0 && !document.body.classList.contains('scroll-locked')) {
-              document.body.style.paddingRight = scrollbarWidth + 'px';
-              var hdr = document.querySelector('.cvetov-header') || document.querySelector('.header');
-              if (hdr) hdr.style.paddingRight = scrollbarWidth + 'px';
-            }
             document.body.classList.add('scroll-locked');
-            if (window.innerWidth <= 768) {
-              document.documentElement.style.overflow = 'hidden';
-            }
+            document.documentElement.style.overflow = 'hidden';
           } else {
             setTimeout(function() {
               var pModal = document.getElementById('product-modal-wrap');
@@ -6457,13 +6456,23 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
                 document.body.classList.remove('scroll-locked');
                 document.documentElement.style.overflow = '';
                 document.body.style.overflow = '';
-                document.body.style.paddingRight = '';
-                var hdr = document.querySelector('.cvetov-header') || document.querySelector('.header');
-                if (hdr) hdr.style.paddingRight = '';
               }
             }, 30);
           }
         }
+
+        // Prevent background wheel scrolling through backdrops on desktop
+        ['cart-drawer-backdrop', 'fav-drawer-backdrop', 'address-modal-backdrop', 'modal-overlay'].forEach(function(id) {
+          var el = document.getElementById(id);
+          if (el) {
+            el.addEventListener('wheel', function(e) {
+              e.preventDefault();
+            }, { passive: false });
+            el.addEventListener('touchmove', function(e) {
+              e.preventDefault();
+            }, { passive: false });
+          }
+        });
 
         function openFavoritesDrawer() {
           if (favDrawerWrap && favDrawer) {
