@@ -2,8 +2,9 @@
 <html lang="ru">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="./favicon.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="MobileOptimized" content="320" />
     <title>Цветочный Рай — Доставка цветов и подарков в Горловке</title>
     <link rel="preload" as="image" href="./hero.png" fetchpriority="high" />
     <!-- Yandex Maps API & Native SuggestView with Official Keys -->
@@ -5356,7 +5357,7 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
                   </div>
                   <div class="co-field-wrap">
                     <label class="co-label" for="co-customer-phone">Номер телефона <span class="co-req">*</span></label>
-                    <input type="tel" class="co-input" id="co-customer-phone" placeholder="+7 (___) ___-__-__" required />
+                    <input type="tel" class="co-input" id="co-customer-phone" inputmode="tel" autocomplete="tel" placeholder="+7 (___) ___-__-__" required />
                   </div>
                 </div>
 
@@ -5385,7 +5386,7 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
                     </div>
                     <div class="co-field-wrap">
                       <label class="co-label" for="co-recipient-phone">Телефон получателя</label>
-                      <input type="tel" class="co-input" id="co-recipient-phone" placeholder="Телефон для связи курьера" />
+                      <input type="tel" class="co-input" id="co-recipient-phone" inputmode="tel" autocomplete="tel" placeholder="+7 (___) ___-__-__" />
                     </div>
                   </div>
                   <label class="co-checkbox-label">
@@ -7598,21 +7599,70 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
         }
 
         function formatPhoneValue(value) {
-          var digits = value.replace(/D/g, '');
-          if (!digits) return '';
-          if (digits[0] === '7' || digits[0] === '8') digits = digits.slice(1);
+          if (!value) return '';
+          var raw = value.replace(/D/g, '');
+          if (!raw) return '';
+          if (raw.length === 1 && (raw === '7' || raw === '8')) return '+7 (';
+          var digits = (raw[0] === '7' || raw[0] === '8') ? raw.slice(1) : raw;
           var res = '+7 (';
           if (digits.length > 0) res += digits.slice(0, 3);
-          if (digits.length >= 3) res += ') ' + digits.slice(3, 6);
-          if (digits.length >= 6) res += '-' + digits.slice(6, 8);
-          if (digits.length >= 8) res += '-' + digits.slice(8, 10);
+          if (digits.length > 3) res += ') ' + digits.slice(3, 6);
+          else if (digits.length === 3) res += ') ';
+          if (digits.length > 6) res += '-' + digits.slice(6, 8);
+          else if (digits.length === 6) res += '-';
+          if (digits.length > 8) res += '-' + digits.slice(8, 10);
+          else if (digits.length === 8) res += '-';
           return res;
         }
 
         function setupPhoneInputMask(inputEl) {
           if (!inputEl) return;
+
           inputEl.addEventListener('input', function() {
             inputEl.value = formatPhoneValue(inputEl.value);
+          });
+
+          inputEl.addEventListener('keydown', function(e) {
+            if (e.key === 'Backspace') {
+              var val = inputEl.value;
+              var digits = val.replace(/D/g, '');
+              if (digits.length <= 1) {
+                inputEl.value = '';
+                return;
+              }
+              var pos = inputEl.selectionStart;
+              if (pos > 0 && inputEl.selectionEnd === pos) {
+                var charBefore = val[pos - 1];
+                if (charBefore === ' ' || charBefore === '-' || charBefore === ')' || charBefore === '(') {
+                  e.preventDefault();
+                  var clean = (digits[0] === '7' || digits[0] === '8') ? digits.slice(1, -1) : digits.slice(0, -1);
+                  inputEl.value = formatPhoneValue(clean);
+                }
+              }
+            }
+          });
+
+          inputEl.addEventListener('focus', function() {
+            if (!inputEl.value) {
+              inputEl.value = '+7 (';
+            }
+          });
+
+          inputEl.addEventListener('blur', function() {
+            if (inputEl.value === '+7 (' || inputEl.value === '+7' || inputEl.value === '+') {
+              inputEl.value = '';
+            }
+          });
+
+          inputEl.addEventListener('paste', function(e) {
+            var clipboard = e.clipboardData || window.clipboardData;
+            if (clipboard) {
+              var pasted = clipboard.getData('text');
+              if (pasted) {
+                e.preventDefault();
+                inputEl.value = formatPhoneValue(pasted);
+              }
+            }
           });
         }
         setupPhoneInputMask(document.getElementById('co-customer-phone'));
