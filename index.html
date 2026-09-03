@@ -5927,7 +5927,7 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
           <div class="delivery-search-section">
             <div class="delivery-main-input-wrap">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="delivery-input-icon"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-              <input type="text" class="delivery-main-input" id="map-address-input" placeholder="Введите улицу и дом" value="Горловка, пр. Победы, 35" autocomplete="off" />
+              <input type="text" class="delivery-main-input" id="map-address-input" placeholder="Введите улицу и дом в Горловке (или кликните на карте)..." value="" autocomplete="off" />
             </div>
             <div class="address-suggestions" id="address-suggestions" style="display: none;"></div>
           </div>
@@ -5962,7 +5962,7 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
               <span>Закрыть</span>
             </button>
             <button class="btn-modal-confirm" id="btn-apply-address">
-              <span id="btn-apply-text">Подтвердить адрес (250 ₽)</span>
+              <span id="btn-apply-text">Подтвердить адрес</span>
             </button>
           </div>
         </div>
@@ -6136,19 +6136,25 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
         productsData.forEach(function(p) { productsMap[p.id] = p; });
 
         var deliveryInfo = {
-          address: 'Горловка, пр. Победы, 35',
-          district: 'Центрально-Городской район',
-          price: 0,
+          address: '',
+          district: '',
+          price: 250,
           time: '30-45 мин',
           flat: '',
           entrance: '',
           floor: '',
-          doorphone: ''
+          doorphone: '',
+          isAddressChosen: false
         };
 
         try {
           var savedAddr = localStorage.getItem('cvetov_address_info');
-          if (savedAddr) deliveryInfo = JSON.parse(savedAddr);
+          if (savedAddr) {
+            var parsed = JSON.parse(savedAddr);
+            if (parsed && parsed.address && parsed.isAddressChosen) {
+              deliveryInfo = parsed;
+            }
+          }
         } catch(e) {}
 
         var cart = [];
@@ -6729,7 +6735,7 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
         function openAddressModal() {
           if (!addressModal) return;
           addressModal.classList.add('is-open');
-          if (mapAddressInput) mapAddressInput.value = deliveryInfo.address;
+          if (mapAddressInput) mapAddressInput.value = (deliveryInfo.isAddressChosen && deliveryInfo.address) ? deliveryInfo.address : '';
           updateModalCalcView();
           initYandexMapGorlovka();
           lockBodyScroll(true);
@@ -6782,13 +6788,17 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
         }
 
         function updateModalCalcView() {
-          var priceStr = deliveryInfo.price === 0 ? 'Бесплатно (0 ₽)' : deliveryInfo.price + ' ₽';
+          var isChosen = deliveryInfo.isAddressChosen && deliveryInfo.address;
+          var priceVal = deliveryInfo.price || 250;
+          var priceStr = isChosen ? (deliveryInfo.price === 0 ? 'Бесплатно (0 ₽)' : deliveryInfo.price + ' ₽') : '—';
           if (calcPriceText) calcPriceText.textContent = priceStr;
-          if (calcTimeText) calcTimeText.textContent = deliveryInfo.time;
-          if (calcZoneName) calcZoneName.textContent = deliveryInfo.district + ' (' + priceStr + ')';
-          if (clientPinTooltip) clientPinTooltip.textContent = deliveryInfo.address + ' (' + priceStr + ')';
+          if (calcTimeText) calcTimeText.textContent = isChosen ? deliveryInfo.time : '30-45 мин';
+          if (calcZoneName) calcZoneName.textContent = isChosen ? (deliveryInfo.district + ' (' + priceStr + ')') : 'Укажите адрес на карте или в поиске';
+          if (clientPinTooltip) clientPinTooltip.textContent = isChosen ? (deliveryInfo.address + ' (' + priceStr + ')') : 'Кликните на дом на карте';
           var btnApplyText = document.getElementById('btn-apply-text');
-          if (btnApplyText) btnApplyText.textContent = 'Подтвердить адрес (' + priceStr + ')';
+          if (btnApplyText) {
+            btnApplyText.textContent = isChosen ? ('Подтвердить адрес (' + priceVal + ' ₽)') : 'Подтвердить адрес';
+          }
         }
 
         function pointInPolygon(point, vs) {
@@ -7127,7 +7137,7 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
           };
         }
 
-        var activeNominatimAbort = null;
+        var activeSearchAbort = null;
 
         function doSearchGorlovkaAddresses(val) {
           if (!val || val.trim().length < 2) {
@@ -7140,12 +7150,11 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
             renderSuggestions(local);
           }
 
-          // Abort prior in-flight fetch
-          if (activeNominatimAbort) {
-            try { activeNominatimAbort.abort(); } catch(e) {}
+          if (activeSearchAbort) {
+            try { activeSearchAbort.abort(); } catch(e) {}
           }
           var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
-          activeNominatimAbort = controller;
+          activeSearchAbort = controller;
 
           var cleanVal = val
             .replace(/г\.?\s*горловка,?\s*/gi, '')
@@ -7153,57 +7162,56 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
             .trim();
           if (!cleanVal) return;
 
-          var nomUrl = 'https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent('Горловка ' + cleanVal) + '&format=json&accept-language=ru&limit=10&viewbox=37.85,48.45,38.25,48.20';
+          var photonUrl = 'https://photon.komoot.io/api/?q=' + encodeURIComponent('Горловка ' + cleanVal) + '&lat=48.3032&lon=38.0245&limit=10';
 
-          fetch(nomUrl, controller ? { signal: controller.signal } : {})
+          fetch(photonUrl, controller ? { signal: controller.signal } : {})
             .then(function(res) { return res.json(); })
-            .then(function(items) {
-              if (!items || items.length === 0) return;
+            .then(function(data) {
+              if (!data || !data.features || data.features.length === 0) return;
 
-              var nomList = items.map(function(it) {
-                var rawName = it.display_name || '';
-                var cleanTitle = rawName
-                  .replace(/Донецкая Народная Республика[^,]*[,]?[ ]*/gi, '')
-                  .replace(/ДНР[^,]*[,]?[ ]*/gi, '')
-                  .replace(/Донецкая область[^,]*[,]?[ ]*/gi, '')
-                  .replace(/Горловская городская община[^,]*[,]?[ ]*/gi, '')
-                  .replace(/Горловский район[^,]*[,]?[ ]*/gi, '')
-                  .replace(/Украина[^,]*/gi, '')
-                  .replace(/[0-9]{5}[,]?[ ]*/g, '')
-                  .replace(/г\.?\s*Горловка,\s*/gi, '')
-                  .replace(/Горловка,\s*/gi, '')
-                  .replace(/,\s*,/g, ',')
-                  .trim();
+              var photonList = [];
+              data.features.forEach(function(feat) {
+                var geom = feat.geometry || {};
+                var coords = geom.coordinates;
+                if (!coords || coords.length < 2) return;
+                var lat = coords[1];
+                var lon = coords[0];
+                if (lat < 48.20 || lat > 48.45 || lon < 37.85 || lon > 38.25) return;
 
-                if (cleanTitle.endsWith(',')) cleanTitle = cleanTitle.slice(0, -1).trim();
-                if (!cleanTitle) cleanTitle = rawName.split(',')[0];
+                var p = feat.properties || {};
+                var streetName = p.street || p.name || '';
+                if (!streetName) return;
 
-                var coords = [parseFloat(it.lat), parseFloat(it.lon)];
-                var zone = getZoneForCoords(coords);
+                streetName = streetName
+                  .replace(/^вулиця\s+/i, 'ул. ')
+                  .replace(/^проспект\s+/i, 'пр. ')
+                  .replace(/^бульвар\s+/i, 'б-р ')
+                  .replace(/^провулок\s+/i, 'пер. ');
 
-                return {
-                  title: cleanTitle,
-                  full: 'Горловка, ' + cleanTitle,
+                var houseNum = p.housenumber || '';
+                var title = streetName + (houseNum ? (', ' + houseNum) : '');
+                var zone = getZoneForCoords([lat, lon]);
+
+                photonList.push({
+                  title: title,
+                  full: 'Горловка, ' + title,
                   dist: zone.dist,
                   price: zone.price,
                   time: zone.time,
-                  coords: coords,
+                  coords: [lat, lon],
                   meta: zone.dist + ' (' + zone.price + ' ₽, ' + zone.time + ')'
-                };
-              }).filter(function(item) {
-                return item.coords && !isNaN(item.coords[0]) && !isNaN(item.coords[1]);
+                });
               });
 
-              // Merge local results with Nominatim live results
               var combined = local.slice();
               var seen = {};
               combined.forEach(function(c) { seen[c.title.toLowerCase()] = true; });
 
-              nomList.forEach(function(nom) {
-                var key = nom.title.toLowerCase();
+              photonList.forEach(function(item) {
+                var key = item.title.toLowerCase();
                 if (!seen[key]) {
                   seen[key] = true;
-                  combined.push(nom);
+                  combined.push(item);
                 }
               });
 
@@ -7248,6 +7256,7 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
               deliveryInfo.district = dist;
               if (price > 0) deliveryInfo.price = price;
               deliveryInfo.time = time;
+              deliveryInfo.isAddressChosen = true;
               if (mapAddressInput) mapAddressInput.value = title || full;
               addressSuggestions.style.display = 'none';
               updateModalCalcView();
@@ -7426,50 +7435,47 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
                 updateModalCalcView();
               }
 
-              function fallbackNominatim(coords) {
-                var url = 'https://nominatim.openstreetmap.org/reverse?format=json&lat=' + coords[0] + '&lon=' + coords[1] + '&accept-language=ru';
-                fetch(url, { headers: { 'Accept': 'application/json' } })
-                  .then(function(r) { return r.json(); })
-                  .then(function(data) {
-                    if (data && data.address) {
-                      var road = data.address.road || data.address.street || data.address.pedestrian || data.address.suburb || '';
-                      var house = data.address.house_number || '';
-                      var shortName = road ? (road + (house ? (', ' + house) : '')) : (data.name || 'Горловка');
-                      applyCleanAddress('Горловка, ' + shortName, shortName);
-                    } else {
-                      var dist = deliveryInfo.district || 'Горловка';
-                      applyCleanAddress('Горловка, район ' + dist, 'район ' + dist);
+              function findNearestStreet(coords) {
+                var minD = Infinity;
+                var best = null;
+                for (var i = 0; i < GORLOVKA_STREET_REGISTRY.length; i++) {
+                  var it = GORLOVKA_STREET_REGISTRY[i];
+                  if (it.coords) {
+                    var d = Math.hypot(coords[0] - it.coords[0], coords[1] - it.coords[1]);
+                    if (d < minD) {
+                      minD = d;
+                      best = it;
                     }
-                  })
-                  .catch(function() {
-                    var dist = deliveryInfo.district || 'Горловка';
-                    applyCleanAddress('Горловка, район ' + dist, 'район ' + dist);
-                  });
+                  }
+                }
+                return best;
               }
 
               function reverseGeocodeCoords(coords) {
-                var handled = false;
-                if (typeof ymaps !== 'undefined' && ymaps.geocode) {
-                  try {
-                    ymaps.geocode(coords, { results: 1 }).then(function(res) {
-                      var first = res && res.geoObjects && res.geoObjects.get(0);
-                      if (first) {
-                        handled = true;
-                        var full = first.getAddressLine() || '';
-                        var shortN = first.properties.get('name') || full;
-                        applyCleanAddress(full, shortN);
-                      } else {
-                        fallbackNominatim(coords);
+                deliveryInfo.isAddressChosen = true;
+                var nearest = findNearestStreet(coords);
+                var immediateStreet = nearest ? nearest.street : (deliveryInfo.district || 'Центр');
+                applyCleanAddress('Горловка, ' + immediateStreet, immediateStreet);
+
+                var photonUrl = 'https://photon.komoot.io/reverse?lat=' + coords[0] + '&lon=' + coords[1];
+                fetch(photonUrl)
+                  .then(function(r) { return r.json(); })
+                  .then(function(data) {
+                    if (data && data.features && data.features[0]) {
+                      var p = data.features[0].properties;
+                      var st = p.street || p.name || (nearest ? nearest.street : '');
+                      var hn = p.housenumber || '';
+                      if (st) {
+                        st = st.replace(/^вулиця\s+/i, 'ул. ')
+                               .replace(/^проспект\s+/i, 'пр. ')
+                               .replace(/^бульвар\s+/i, 'б-р ')
+                               .replace(/^провулок\s+/i, 'пер. ');
+                        var fullShort = st + (hn ? (', ' + hn) : '');
+                        applyCleanAddress('Горловка, ' + fullShort, fullShort);
                       }
-                    }).catch(function() {
-                      fallbackNominatim(coords);
-                    });
-                  } catch(e) {
-                    fallbackNominatim(coords);
-                  }
-                } else {
-                  fallbackNominatim(coords);
-                }
+                    }
+                  })
+                  .catch(function() {});
               }
 
               function setDeliveryLocationAndAddress(coords) {
@@ -7549,20 +7555,28 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
                     if (first) {
                       onFoundCoords(first.geometry.getCoordinates(), first.getAddressLine(), first.properties.get('name'));
                     } else {
-                      fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(fullQuery) + '&accept-language=ru&limit=1')
+                      fetch('https://photon.komoot.io/api/?q=' + encodeURIComponent('Горловка ' + addrText) + '&lat=48.3032&lon=38.0245&limit=1')
                         .then(function(r) { return r.json(); })
                         .then(function(data) {
-                          if (data && data[0]) {
-                            onFoundCoords([parseFloat(data[0].lat), parseFloat(data[0].lon)], data[0].display_name, data[0].name || addrText);
+                          if (data && data.features && data.features[0]) {
+                            var f = data.features[0];
+                            var c = f.geometry ? f.geometry.coordinates : null;
+                            if (c) {
+                              onFoundCoords([c[1], c[0]], 'Горловка, ' + (f.properties.name || addrText), f.properties.name || addrText);
+                            }
                           }
                         }).catch(function() {});
                     }
                   }).catch(function() {
-                    fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(fullQuery) + '&accept-language=ru&limit=1')
+                    fetch('https://photon.komoot.io/api/?q=' + encodeURIComponent('Горловка ' + addrText) + '&lat=48.3032&lon=38.0245&limit=1')
                       .then(function(r) { return r.json(); })
                       .then(function(data) {
-                        if (data && data[0]) {
-                          onFoundCoords([parseFloat(data[0].lat), parseFloat(data[0].lon)], data[0].display_name, data[0].name || addrText);
+                        if (data && data.features && data.features[0]) {
+                          var f = data.features[0];
+                          var c = f.geometry ? f.geometry.coordinates : null;
+                          if (c) {
+                            onFoundCoords([c[1], c[0]], 'Горловка, ' + (f.properties.name || addrText), f.properties.name || addrText);
+                          }
                         }
                       }).catch(function() {});
                   });
@@ -7581,12 +7595,24 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
             var floor = document.getElementById('addr-floor');
             var doorphone = document.getElementById('addr-doorphone');
             var isPrivate = document.getElementById('private-house-toggle');
-            if (mapAddressInput && mapAddressInput.value.trim()) {
-              var typedVal = mapAddressInput.value.trim();
-              if (deliveryInfo.address.indexOf(typedVal) === -1) {
-                deliveryInfo.address = typedVal.indexOf('Горловка') !== -1 ? typedVal : ('Горловка, ' + typedVal);
+            var typedVal = mapAddressInput ? mapAddressInput.value.trim() : '';
+
+            if (typedVal) {
+              deliveryInfo.address = typedVal.indexOf('Горловка') !== -1 ? typedVal : ('Горловка, ' + typedVal);
+              var localMatches = findLocalStreetMatches(typedVal);
+              if (localMatches.length > 0) {
+                deliveryInfo.district = localMatches[0].dist;
+                deliveryInfo.price = localMatches[0].price;
+                deliveryInfo.time = localMatches[0].time;
+              } else if (window.checkCoordsZoneGlobal && window.gorlovkaClientPlacemark) {
+                window.checkCoordsZoneGlobal(window.gorlovkaClientPlacemark.geometry.getCoordinates());
               }
+              deliveryInfo.isAddressChosen = true;
+            } else if (!deliveryInfo.isAddressChosen) {
+              showToast('Пожалуйста, выберите адрес на карте или введите улицу');
+              return;
             }
+
             if (flat) deliveryInfo.flat = flat.value;
             if (entrance) deliveryInfo.entrance = entrance.value;
             if (floor) deliveryInfo.floor = floor.value;
@@ -8563,81 +8589,32 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
           });
         });
 
-        // --- 6. CATALOG DYNAMIC RIBBON DATA & GROUPS (ALL FLOWERS CONSOLIDATED, 3D MODELS FOR ALL BUTTONS) ---
-        var ribbonGroups = {
-          flowers: {
-            title: 'Цветы и букеты',
-            parentName: 'Цветы и букеты',
-            desc: 'Свежие авторские и монобукеты, шляпные коробки, корзины, свадебные и сезонные цветы в Горловке',
-            items: [
-              { cat: 'Цветы', title: 'Все цветы<br/>(225)', img: './3d/3d_all_flowers.png' },
-              { cat: 'Сборные букеты размер M', title: 'Авторские<br/>букеты M', img: './3d/3d_author.png' },
-              { cat: 'Монобукеты', title: 'Монобукеты<br/>(розы)', img: './3d/3d_mono.png' },
-              { cat: 'Сборные букеты размер S', title: 'Классические<br/>букеты S', img: './3d/3d_classic.png' },
-              { cat: 'Сборные букеты размер L', title: 'Большие<br/>букеты L', img: './3d/3d_wow.png' },
-              { cat: 'WOW-букеты', title: 'WOW-букеты<br/>101 роза', img: './3d/3d_wow.png' },
-              { cat: 'В коробках', title: 'Цветы в<br/>коробках', img: './3d/3d_flower_box.png' },
-              { cat: 'В корзинках', title: 'Цветы в<br/>корзинах', img: './3d/3d_basket.png' },
-              { cat: 'Букет Невесты', title: 'Свадебные<br/>букеты', img: './3d/3d_wedding.png' },
-              { cat: 'Ювелирная флористика', title: 'Ювелирная<br/>флористика', img: './3d/3d_composition.png' },
-              { cat: 'С сухоцветами', title: 'Букеты с<br/>сухоцветами', img: './3d/3d_dried.png' },
-              { cat: 'Сезонные композиции', title: 'Сезонные<br/>цветы', img: './3d/3d_seasonal.png' },
-              { cat: 'Комнатные растения', title: 'Комнатные<br/>растения', img: './3d/3d_plant.png' }
-            ]
-          },
-          decor: {
-            title: 'Оформление и декор мероприятий',
-            parentName: 'Оформление и декор мероприятий',
-            desc: 'Флористическое оформление свадебных арок, президиумов, банкетных залов и фотозон в Горловке',
-            items: [
-              { cat: 'Оформление и декор мероприятий', title: 'Смотреть<br/>всё (6)', img: './3d/3d_wedding_arch.png' },
-              { cat: 'Оформление свадебной арки', title: 'Свадебные<br/>арки', img: './3d/3d_wedding_arch.png' },
-              { cat: 'Декор президиума', title: 'Декор залов<br/>и столов', img: './3d/3d_hall_decor.png' },
-              { cat: 'Композиции на столы', title: 'Композиции<br/>на столы', img: './3d/3d_basket.png' },
-              { cat: 'Оформление фотозоны', title: 'Фотозоны<br/>для событий', img: './3d/3d_photozone.png' }
-            ]
-          },
-          gifts: {
-            title: 'Подарки и декор',
-            parentName: 'Подарки и декор',
-            desc: 'Мягкие игрушки, подарочные боксы, открытки и сувениры к праздникам',
-            items: [
-              { cat: 'Подарки и декор', title: 'Смотреть<br/>всё (27)', img: './3d/3d_gift_box.png' },
-              { cat: 'Мягкие игрушки', title: 'Мягкие<br/>игрушки', img: './3d/3d_toys.png' },
-              { cat: 'Подарочные наборы', title: 'Подарочные<br/>наборы', img: './3d/3d_gift_box.png' },
-              { cat: 'Сувениры и декор', title: 'Сувениры<br/>и декор', img: './3d/3d_card.png' },
-              { cat: 'Открытки', title: 'Дизайнерские<br/>открытки', img: './3d/3d_card.png' }
-            ]
-          },
-          balloons: {
-            title: 'Гелиевые шары',
-            parentName: 'Гелиевые шары',
-            desc: 'Гелиевые шары, наборы, фонтаны и большие коробки с сюрпризом в Горловке',
-            items: [
-              { cat: 'Гелиевые шары', title: 'Смотреть<br/>всё (4)', img: './3d/3d_balloons_set.png' },
-              { cat: 'Наборы шаров', title: 'Наборы и<br/>фонтаны', img: './3d/3d_balloons_set.png' },
-              { cat: 'Шары в коробке', title: 'Шары в<br/>коробке', img: './3d/3d_balloons_box.png' },
-              { cat: 'Шары с надписями', title: 'Шары с<br/>надписями', img: './3d/3d_balloon_single.png' }
-            ]
-          },
-          all: {
-            title: 'Весь каталог товаров',
-            parentName: 'Каталог товаров',
-            desc: 'Все товары магазина «Цветочный Рай» с быстрой доставкой по Горловке',
-            items: [
-              { cat: 'all', title: 'Смотреть<br/>всё', img: './3d/3d_all_flowers.png' },
-              { cat: 'Цветы', title: 'Цветы и<br/>букеты', img: './3d/3d_all_flowers.png' },
-              { cat: 'Оформление и декор мероприятий', title: 'Декор<br/>мероприятий', img: './3d/3d_wedding_arch.png' },
-              { cat: 'Подарки и декор', title: 'Подарки и<br/>декор', img: './3d/3d_gift_box.png' },
-              { cat: 'Гелиевые шары', title: 'Гелиевые<br/>шары', img: './3d/3d_balloons_set.png' },
-              { cat: 'Сборные букеты размер M', title: 'Авторские<br/>букеты', img: './3d/3d_author.png' },
-              { cat: 'Монобукеты', title: 'Монобукеты<br/>(розы)', img: './3d/3d_mono.png' },
-              { cat: 'В коробках', title: 'В коробках<br/>и корзинах', img: './3d/3d_flower_box.png' },
-              { cat: 'Мягкие игрушки', title: 'Мягкие<br/>игрушки', img: './3d/3d_toys.png' },
-              { cat: 'Комнатные растения', title: 'Комнатные<br/>растения', img: './3d/3d_plant.png' }
-            ]
-          }
-        };
+        // --- 6. CATALOG DYNAMIC RIBBON DATA & UNIFIED CATEGORIES (NO ISOLATED GROUPS, ALL CATEGORIES ALWAYS AVAILABLE) ---
+        var UNIFIED_CAT_RIBBON = [
+          { cat: 'all', title: 'Все товары<br/>(260)', img: './3d/3d_all_flowers.png' },
+          { cat: 'Цветы', title: 'Все цветы<br/>(225)', img: './3d/3d_all_flowers.png' },
+          { cat: 'Сборные букеты размер M', title: 'Авторские<br/>букеты M', img: './3d/3d_author.png' },
+          { cat: 'Монобукеты', title: 'Монобукеты<br/>(розы)', img: './3d/3d_mono.png' },
+          { cat: 'Сборные букеты размер S', title: 'Классические<br/>букеты S', img: './3d/3d_classic.png' },
+          { cat: 'Сборные букеты размер L', title: 'Большие<br/>букеты L', img: './3d/3d_wow.png' },
+          { cat: 'WOW-букеты', title: 'WOW-букеты<br/>101 роза', img: './3d/3d_wow.png' },
+          { cat: 'В коробках', title: 'Цветы в<br/>коробках', img: './3d/3d_flower_box.png' },
+          { cat: 'В корзинках', title: 'Цветы в<br/>корзинах', img: './3d/3d_basket.png' },
+          { cat: 'Букет Невесты', title: 'Свадебные<br/>букеты', img: './3d/3d_wedding.png' },
+          { cat: 'Гелиевые шары', title: 'Гелиевые<br/>шары (4)', img: './3d/3d_balloons_set.png' },
+          { cat: 'Наборы шаров', title: 'Наборы и<br/>фонтаны', img: './3d/3d_balloons_set.png' },
+          { cat: 'Шары в коробке', title: 'Шары в<br/>коробке', img: './3d/3d_balloons_box.png' },
+          { cat: 'Подарки и декор', title: 'Подарки и<br/>декор (27)', img: './3d/3d_gift_box.png' },
+          { cat: 'Мягкие игрушки', title: 'Мягкие<br/>игрушки', img: './3d/3d_toys.png' },
+          { cat: 'Подарочные наборы', title: 'Подарочные<br/>наборы', img: './3d/3d_gift_box.png' },
+          { cat: 'Оформление и декор мероприятий', title: 'Декор<br/>мероприятий (6)', img: './3d/3d_wedding_arch.png' },
+          { cat: 'Оформление свадебной арки', title: 'Свадебные<br/>арки', img: './3d/3d_wedding_arch.png' },
+          { cat: 'Декор президиума', title: 'Декор залов<br/>и столов', img: './3d/3d_hall_decor.png' },
+          { cat: 'Комнатные растения', title: 'Комнатные<br/>растения', img: './3d/3d_plant.png' },
+          { cat: 'С сухоцветами', title: 'Букеты с<br/>сухоцветами', img: './3d/3d_dried.png' },
+          { cat: 'Сезонные композиции', title: 'Сезонные<br/>цветы', img: './3d/3d_seasonal.png' },
+          { cat: 'Ювелирная флористика', title: 'Ювелирная<br/>флористика', img: './3d/3d_composition.png' }
+        ];
 
         function getCategoryGroup(catName) {
           var c = (catName || '').toLowerCase().trim();
@@ -8648,43 +8625,43 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
           return 'flowers';
         }
 
-        var currentRenderedGroup = null;
+        var isRibbonRendered = false;
         var pageRibbonTrack = document.getElementById('page-ribbon-track');
         var btnPageRibbonPrev = document.getElementById('btn-page-ribbon-prev');
         var btnPageRibbonNext = document.getElementById('btn-page-ribbon-next');
 
         function renderRibbonForGroup(groupKey, activeCatClean) {
           if (!pageRibbonTrack) return;
-          var groupData = ribbonGroups[groupKey] || ribbonGroups.flowers;
 
-          if (currentRenderedGroup !== groupKey) {
-            currentRenderedGroup = groupKey;
-            pageRibbonTrack.innerHTML = groupData.items.map(function(item) {
+          if (!isRibbonRendered || pageRibbonTrack.children.length === 0) {
+            isRibbonRendered = true;
+            pageRibbonTrack.innerHTML = UNIFIED_CAT_RIBBON.map(function(item) {
               return '<div class="ribbon-btn" data-cat="' + item.cat + '">' +
                 '<span class="ribbon-btn__text">' + item.title + '</span>' +
                 '<img src="' + item.img + '" alt="" class="ribbon-btn__img" />' +
               '</div>';
             }).join('');
-
-            pageRibbonTrack.querySelectorAll('.ribbon-btn').forEach(function(btn) {
-              btn.addEventListener('click', function(e) {
-                e.preventDefault();
-                var cat = btn.getAttribute('data-cat') || 'all';
-                navigateToView('catalog', cat, pageSearchInput ? pageSearchInput.value : '');
-              });
-            });
-
-            pageRibbonTrack.scrollLeft = 0;
           }
 
+          var activeBtn = null;
           pageRibbonTrack.querySelectorAll('.ribbon-btn').forEach(function(btn) {
             var btnCat = (btn.getAttribute('data-cat') || '').toLowerCase().trim();
-            if (btnCat === activeCatClean || (activeCatClean === 'all' && btnCat === 'all') || (activeCatClean === 'цветы' && btnCat === 'цветы')) {
+            var isMatch = (btnCat === activeCatClean) ||
+                          (activeCatClean === 'all' && btnCat === 'all') ||
+                          ((activeCatClean === 'цветы' || activeCatClean === 'все цветы') && btnCat === 'цветы');
+            if (isMatch) {
               btn.classList.add('active');
+              activeBtn = btn;
             } else {
               btn.classList.remove('active');
             }
           });
+
+          if (activeBtn) {
+            try {
+              activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            } catch(e) {}
+          }
 
           setTimeout(updateRibbonArrowStates, 60);
         }
@@ -8698,18 +8675,37 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
           btnPageRibbonNext.style.cursor = pageRibbonTrack.scrollLeft >= maxScroll - 8 ? 'default' : 'pointer';
         }
 
-        if (pageRibbonTrack && btnPageRibbonPrev && btnPageRibbonNext) {
-          btnPageRibbonPrev.addEventListener('click', function(e) {
+        if (pageRibbonTrack) {
+          var ribbonTouchStartX = 0;
+          var ribbonTouchStartY = 0;
+          var ribbonIsScrolling = false;
+
+          pageRibbonTrack.addEventListener('touchstart', function(e) {
+            if (e.touches && e.touches[0]) {
+              ribbonTouchStartX = e.touches[0].clientX;
+              ribbonTouchStartY = e.touches[0].clientY;
+              ribbonIsScrolling = false;
+            }
+          }, { passive: true });
+
+          pageRibbonTrack.addEventListener('touchmove', function(e) {
+            if (e.touches && e.touches[0]) {
+              var dx = Math.abs(e.touches[0].clientX - ribbonTouchStartX);
+              var dy = Math.abs(e.touches[0].clientY - ribbonTouchStartY);
+              if (dx > 8 || dy > 8) {
+                ribbonIsScrolling = true;
+              }
+            }
+          }, { passive: true });
+
+          pageRibbonTrack.addEventListener('touchend', function(e) {
+            if (ribbonIsScrolling) return;
+            var btn = e.target.closest('.ribbon-btn');
+            if (!btn) return;
             e.preventDefault();
-            scrollTrackToCard(pageRibbonTrack, -1);
+            var cat = btn.getAttribute('data-cat') || 'all';
+            navigateToView('catalog', cat, pageSearchInput ? pageSearchInput.value : '');
           });
-          btnPageRibbonNext.addEventListener('click', function(e) {
-            e.preventDefault();
-            scrollTrackToCard(pageRibbonTrack, 1);
-          });
-          pageRibbonTrack.addEventListener('scroll', updateRibbonArrowStates, { passive: true });
-          window.addEventListener('resize', updateRibbonArrowStates);
-          setTimeout(updateRibbonArrowStates, 100);
 
           pageRibbonTrack.addEventListener('click', function(e) {
             var btn = e.target.closest('.ribbon-btn');
@@ -8718,6 +8714,20 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
             var cat = btn.getAttribute('data-cat') || 'all';
             navigateToView('catalog', cat, pageSearchInput ? pageSearchInput.value : '');
           });
+
+          if (btnPageRibbonPrev && btnPageRibbonNext) {
+            btnPageRibbonPrev.addEventListener('click', function(e) {
+              e.preventDefault();
+              scrollTrackToCard(pageRibbonTrack, -1);
+            });
+            btnPageRibbonNext.addEventListener('click', function(e) {
+              e.preventDefault();
+              scrollTrackToCard(pageRibbonTrack, 1);
+            });
+            pageRibbonTrack.addEventListener('scroll', updateRibbonArrowStates, { passive: true });
+            window.addEventListener('resize', updateRibbonArrowStates);
+            setTimeout(updateRibbonArrowStates, 100);
+          }
         }
 
 
@@ -8896,7 +8906,6 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
           var cleanCat = currentActiveCategory.toLowerCase().trim();
           var q = (query || '').toLowerCase().trim();
           var groupKey = getCategoryGroup(currentActiveCategory);
-          var groupInfo = ribbonGroups[groupKey] || ribbonGroups.flowers;
 
           if (btnPageSearchClear) {
             btnPageSearchClear.style.display = q ? 'block' : 'none';
@@ -8981,28 +8990,32 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
           });
 
           var displayCatName = currentActiveCategory;
+          var desc = 'Свежие авторские и монобукеты, шляпные коробки, корзины, подарки и декор с доставкой по Горловке';
           if (cleanCat === 'all' || cleanCat === 'все товары' || cleanCat === 'весь каталог') {
             displayCatName = 'Весь каталог цветов и подарков';
+            desc = 'Все букеты, шары, подарки и декор магазина «Цветочный Рай» с быстрой доставкой по Горловке';
           } else if (isFlowersMaster) {
             displayCatName = 'Цветы и букеты';
+            desc = 'Свежие авторские и монобукеты, шляпные коробки и корзины с доставкой по Горловке';
+          } else if (cleanCat.indexOf('шар') !== -1) {
+            displayCatName = currentActiveCategory === 'Гелиевые шары' ? 'Гелиевые воздушные шары' : currentActiveCategory;
+            desc = 'Гелиевые шары, наборы, фонтаны и большие коробки с сюрпризом в Горловке';
+          } else if (cleanCat.indexOf('подарк') !== -1 || cleanCat.indexOf('игрушк') !== -1) {
+            displayCatName = currentActiveCategory === 'Подарки и декор' ? 'Подарки и мягкие игрушки' : currentActiveCategory;
+            desc = 'Мягкие игрушки, подарочные боксы, открытки и сувениры к праздникам в Горловке';
+          } else if (cleanCat.indexOf('декор') !== -1 || cleanCat.indexOf('мероприят') !== -1 || cleanCat.indexOf('арк') !== -1 || cleanCat.indexOf('президиум') !== -1 || cleanCat.indexOf('фотозон') !== -1) {
+            displayCatName = currentActiveCategory;
+            desc = 'Флористическое оформление свадебных арок, президиумов, банкетных залов и фотозон в Горловке';
           }
 
           if (pageCatalogTitle) pageCatalogTitle.textContent = displayCatName;
-          if (pageCatalogDesc) pageCatalogDesc.textContent = groupInfo.desc;
+          if (pageCatalogDesc) pageCatalogDesc.textContent = desc;
           if (pageCatalogCount) pageCatalogCount.textContent = visibleCount + ' ' + getPluralGoods(visibleCount);
 
           if (btnCrumbParent && crumbSep2 && breadcrumbCategory) {
-            if (groupKey !== 'all' && currentActiveCategory !== groupInfo.title) {
-              btnCrumbParent.style.display = 'inline';
-              btnCrumbParent.textContent = groupInfo.title;
-              btnCrumbParent.setAttribute('data-parent-cat', groupInfo.items[0].cat);
-              crumbSep2.style.display = 'inline';
-              breadcrumbCategory.textContent = displayCatName;
-            } else {
-              btnCrumbParent.style.display = 'none';
-              crumbSep2.style.display = 'none';
-              breadcrumbCategory.textContent = displayCatName;
-            }
+            btnCrumbParent.style.display = 'none';
+            crumbSep2.style.display = 'none';
+            breadcrumbCategory.textContent = displayCatName;
           }
 
           if (catalogEmptyState) catalogEmptyState.style.display = visibleCount === 0 ? 'block' : 'none';
@@ -9022,6 +9035,41 @@ window.GORLOVKA_DELIVERY_ZONES = [{"id":"ЦГР","name":"ЦГР","fillColor":"#e
           btnFlyoutAll.addEventListener('click', function(e) {
             e.preventDefault();
             navigateToView('catalog', 'all');
+          });
+        }
+
+        var hubTrackEl = document.getElementById('category-hub-track');
+        if (hubTrackEl) {
+          var hubTouchStartX = 0;
+          var hubTouchStartY = 0;
+          var hubIsScrolling = false;
+
+          hubTrackEl.addEventListener('touchstart', function(e) {
+            if (e.touches && e.touches[0]) {
+              hubTouchStartX = e.touches[0].clientX;
+              hubTouchStartY = e.touches[0].clientY;
+              hubIsScrolling = false;
+            }
+          }, { passive: true });
+
+          hubTrackEl.addEventListener('touchmove', function(e) {
+            if (e.touches && e.touches[0]) {
+              var dx = Math.abs(e.touches[0].clientX - hubTouchStartX);
+              var dy = Math.abs(e.touches[0].clientY - hubTouchStartY);
+              if (dx > 8 || dy > 8) {
+                hubIsScrolling = true;
+              }
+            }
+          }, { passive: true });
+
+          hubTrackEl.addEventListener('touchend', function(e) {
+            if (hubIsScrolling) return;
+            var target = e.target.closest('.hub-card__header, .hub-cell, .hub-cell__more-btn');
+            if (target) {
+              e.preventDefault();
+              var cat = target.getAttribute('data-cat') || 'Цветы';
+              navigateToView('catalog', cat);
+            }
           });
         }
 

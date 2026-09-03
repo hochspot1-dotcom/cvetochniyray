@@ -281,6 +281,40 @@ server.listen(4178, async () => {
   });
   console.log('Checkout initial state:', checkoutState);
 
+  // 6. Test Address Confirmation and Price Update in Checkout
+  console.log('\n--- Testing Address Confirmation and Checkout Update ---');
+  const confirmResult = await page.evaluate(async () => {
+    // Open modal
+    const openBtn = document.getElementById('btn-header-address');
+    if (openBtn) openBtn.click();
+    await new Promise(r => setTimeout(r, 400));
+
+    const input = document.getElementById('map-address-input');
+    input.value = 'Гагарина 12';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    await new Promise(r => setTimeout(r, 400));
+
+    const firstRow = document.querySelector('#address-suggestions .suggest-row');
+    if (firstRow) firstRow.click();
+    await new Promise(r => setTimeout(r, 300));
+
+    const applyBtn = document.getElementById('btn-apply-address');
+    if (applyBtn) applyBtn.click();
+    await new Promise(r => setTimeout(r, 400));
+
+    const zoneText = document.getElementById('co-selected-zone-text');
+    const addrText = document.getElementById('co-selected-address-text')?.textContent;
+    const deliverySum = document.getElementById('co-sum-delivery')?.textContent;
+
+    return {
+      zoneDisplay: zoneText ? window.getComputedStyle(zoneText).display : 'null',
+      zoneContent: zoneText ? zoneText.textContent : '',
+      addrText,
+      deliverySum
+    };
+  });
+  console.log('Confirmed address state:', confirmResult);
+
   // 6. Test Buttons Cleanliness (no dots or checkmarks)
   console.log('\n--- Testing Clean Buttons ---');
   const buttonCleanliness = await page.evaluate(() => {
