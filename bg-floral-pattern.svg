@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320">
+  <defs>
+    <style>
+      .leaf-soft { fill: #2D6A4F; fill-opacity: 0.06; stroke: #2D6A4F; stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; stroke-opacity: 0.22; }
+      .petal-soft { fill: #52B788; fill-opacity: 0.04; stroke: #245841; stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; stroke-opacity: 0.24; }
+      .stem-soft { fill: none; stroke: #2D6A4F; stroke-width: 1.1; stroke-linecap: round; stroke-opacity: 0.2; }
+      .dot-soft { fill: #2D6A4F; fill-opacity: 0.25; }
+    </style>
+  </defs>
+
+  <!-- Flower 1: Top-Left Tender Peony -->
+  <g transform="translate(50, 50) scale(0.7)">
+    <circle cx="0" cy="0" r="10" class="petal-soft" />
+    <path d="M-8,-4 C-16,-18 16,-18 8,-4 C18,-2 20,14 8,16 C-4,20 -18,12 -8,-4 Z" class="petal-soft" />
+    <path d="M-20,-14 C-32,-32 32,-32 20,-14 C36,-8 38,24 16,28 C-14,35 -34,22 -20,-14 Z" class="petal-soft" />
+    <path d="M-30,-22 C-46,-46 46,-46 30,-22 C52,-14 54,34 22,40 C-20,50 -48,32 -30,-22 Z" class="petal-soft" />
+    <path d="M0,40 Q-15,75 10,110" class="stem-soft" />
+    <path d="M-4,65 C-30,52 -40,70 -20,82 C-5,90 0,70 -4,65 Z" class="leaf-soft" />
+    <path d="M5,88 C30,76 40,94 20,106 C5,114 3,92 5,88 Z" class="leaf-soft" />
+    <circle cx="35" cy="-28" r="2" class="dot-soft" />
+    <circle cx="-32" cy="-38" r="1.5" class="dot-soft" />
+  </g>
+
+  <!-- Branch 1: Top-Right Eucalyptus Sprig -->
+  <g transform="translate(260, 60) scale(0.7) rotate(45)">
+    <path d="M0,0 Q20,60 10,130" class="stem-soft" />
+    <circle cx="14" cy="20" r="13" class="leaf-soft" />
+    <circle cx="-12" cy="45" r="14" class="leaf-soft" />
+    <circle cx="20" cy="75" r="15" class="leaf-soft" />
+    <circle cx="-14" cy="105" r="13" class="leaf-soft" />
+  </g>
+
+  <!-- Flower 2: Bottom-Right Blossom -->
+  <g transform="translate(240, 220) scale(0.75) rotate(-20)">
+    <circle cx="0" cy="0" r="12" class="petal-soft" />
+    <path d="M-10,-5 C-20,-22 20,-22 10,-5 C22,-2 24,16 10,20 C-5,24 -22,14 -10,-5 Z" class="petal-soft" />
+    <path d="M-24,-16 C-38,-38 38,-38 24,-16 C42,-10 44,30 20,34 C-16,42 -40,26 -24,-16 Z" class="petal-soft" />
+    <path d="M-36,-26 C-54,-54 54,-54 36,-26 C60,-18 64,42 26,50 C-24,62 -58,40 -36,-26 Z" class="petal-soft" />
+    <path d="M0,50 Q-12,90 15,130" class="stem-soft" />
+    <path d="M-3,78 C-32,64 -44,84 -24,98 C-8,108 0,82 -3,78 Z" class="leaf-soft" />
+    <path d="M7,105 C34,92 46,112 26,128 C8,138 5,112 7,105 Z" class="leaf-soft" />
+    <circle cx="48" cy="-35" r="2" class="dot-soft" />
+  </g>
+
+  <!-- Branch 2: Bottom-Left Foliage -->
+  <g transform="translate(60, 240) scale(0.65) rotate(-60)">
+    <path d="M0,0 Q20,50 15,120" class="stem-soft" />
+    <path d="M5,15 C28,4 38,22 20,32 C5,38 3,20 5,15 Z" class="leaf-soft" />
+    <path d="M8,48 C-16,36 -28,54 -10,65 C5,70 6,52 8,48 Z" class="leaf-soft" />
+    <path d="M12,80 C35,68 45,86 28,96 C14,102 10,84 12,80 Z" class="leaf-soft" />
+    <circle cx="-22" cy="20" r="1.8" class="dot-soft" />
+    <circle cx="30" cy="115" r="1.5" class="dot-soft" />
+  </g>
+
+  <!-- Central floating botanical petals -->
+  <g transform="translate(160, 150) scale(0.75)">
+    <path d="M-22,-22 C-12,-38 18,-28 12,-12 C6,0 -16,-6 -22,-22 Z" class="petal-soft" />
+    <path d="M28,22 C38,6 65,16 60,32 C54,44 32,38 28,22 Z" class="petal-soft" />
+    <circle cx="-6" cy="16" r="1.6" class="dot-soft" />
+    <circle cx="16" cy="-22" r="1.4" class="dot-soft" />
+  </g>
+</svg>
