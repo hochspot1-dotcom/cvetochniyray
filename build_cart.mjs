@@ -1611,8 +1611,16 @@ ${allCardsHtml}
 
         function lockBodyScroll(locked) {
           if (locked) {
+            var scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+            if (scrollbarWidth > 0 && !document.body.classList.contains('scroll-locked')) {
+              document.body.style.paddingRight = scrollbarWidth + 'px';
+              var hdr = document.querySelector('.cvetov-header') || document.querySelector('.header');
+              if (hdr) hdr.style.paddingRight = scrollbarWidth + 'px';
+            }
             document.body.classList.add('scroll-locked');
-            document.documentElement.style.overflow = 'hidden';
+            if (window.innerWidth <= 768) {
+              document.documentElement.style.overflow = 'hidden';
+            }
           } else {
             setTimeout(function() {
               var pModal = document.getElementById('product-modal-wrap');
@@ -1631,6 +1639,9 @@ ${allCardsHtml}
                 document.body.classList.remove('scroll-locked');
                 document.documentElement.style.overflow = '';
                 document.body.style.overflow = '';
+                document.body.style.paddingRight = '';
+                var hdr = document.querySelector('.cvetov-header') || document.querySelector('.header');
+                if (hdr) hdr.style.paddingRight = '';
               }
             }, 30);
           }
@@ -3146,7 +3157,13 @@ ${allCardsHtml}
           searchOverlay.classList.add('active');
           lockBodyScroll(true);
           if (mainSearchInput) {
-            setTimeout(function() { mainSearchInput.focus(); }, 60);
+            setTimeout(function() {
+              try {
+                mainSearchInput.focus({ preventScroll: true });
+              } catch (e) {
+                mainSearchInput.focus();
+              }
+            }, 60);
           }
         }
 
