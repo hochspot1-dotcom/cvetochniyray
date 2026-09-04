@@ -3763,6 +3763,67 @@ ${allCardsHtml}
         var bestCards = document.querySelectorAll('.bestseller-card');
 
         bestTabs.forEach(function(tab) {
+          var touchStartX = 0, touchStartY = 0, touchStartTime = 0, handledTap = false;
+
+          function switchTab() {
+            bestTabs.forEach(function(t) { t.classList.remove('active'); });
+            tab.classList.add('active');
+            var cat = tab.getAttribute('data-cat') || 'all';
+
+            bestCards.forEach(function(card) {
+              var cardCat = (card.getAttribute('data-category') || '').toLowerCase();
+              var allCats = (card.getAttribute('data-all-categories') || '').toLowerCase();
+              var cardTitle = ((card.querySelector('.bestseller-card__title') || {}).textContent || '').toLowerCase();
+
+              if (cat === 'all') {
+                card.style.display = 'flex';
+              } else if (cat.toLowerCase() === 'цветы') {
+                var isFlower = cardCat.indexOf('букет') !== -1 || cardCat.indexOf('композиц') !== -1 || allCats.indexOf('букет') !== -1 || allCats.indexOf('композиц') !== -1;
+                card.style.display = isFlower ? 'flex' : 'none';
+              } else {
+                var match = cardCat.indexOf(cat.toLowerCase()) !== -1 ||
+                            allCats.indexOf(cat.toLowerCase()) !== -1 ||
+                            cardTitle.indexOf(cat.toLowerCase()) !== -1;
+                card.style.display = match ? 'flex' : 'none';
+              }
+            });
+
+            if (track) {
+              track.scrollTo({ left: 0, behavior: 'smooth' });
+              setTimeout(updateArrowStates, 250);
+            }
+          }
+
+          tab.addEventListener('touchstart', function(e) {
+            if (e.touches && e.touches.length === 1) {
+              touchStartX = e.touches[0].clientX;
+              touchStartY = e.touches[0].clientY;
+              touchStartTime = Date.now();
+              handledTap = false;
+            }
+          }, { passive: true });
+
+          tab.addEventListener('touchend', function(e) {
+            if (e.changedTouches && e.changedTouches.length === 1) {
+              var dx = Math.abs(e.changedTouches[0].clientX - touchStartX);
+              var dy = Math.abs(e.changedTouches[0].clientY - touchStartY);
+              var dt = Date.now() - touchStartTime;
+              if (dx < 16 && dy < 16 && dt < 450) {
+                handledTap = true;
+                switchTab();
+              }
+            }
+          }, { passive: true });
+
+          tab.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (handledTap) { handledTap = false; return; }
+            switchTab();
+          });
+        });
+
+        var skipOriginalBestTabs = true;
+        if (!skipOriginalBestTabs) bestTabs.forEach(function(tab) {
           tab.addEventListener('click', function(e) {
             e.preventDefault();
             bestTabs.forEach(function(t) { t.classList.remove('active'); });
@@ -3813,7 +3874,10 @@ ${allCardsHtml}
               { cat: 'Ювелирная флористика', title: 'Ювелирная<br/>флористика', img: './3d/3d_composition.png' },
               { cat: 'С сухоцветами', title: 'Букеты с<br/>сухоцветами', img: './3d/3d_dried.png' },
               { cat: 'Сезонные композиции', title: 'Сезонные<br/>цветы', img: './3d/3d_seasonal.png' },
-              { cat: 'Комнатные растения', title: 'Комнатные<br/>растения', img: './3d/3d_plant.png' }
+              { cat: 'Комнатные растения', title: 'Комнатные<br/>растения', img: './3d/3d_plant.png' },
+              { cat: 'Гелиевые шары', title: 'Гелиевые<br/>шары (4)', img: './3d/3d_balloons_set.png' },
+              { cat: 'Подарки и декор', title: 'Подарки и<br/>декор (31)', img: './3d/3d_gift_box.png' },
+              { cat: 'Оформление и декор мероприятий', title: 'Оформление<br/>залов (6)', img: './3d/3d_wedding_arch.png' }
             ]
           },
           decor: {
@@ -3821,34 +3885,39 @@ ${allCardsHtml}
             parentName: 'Оформление и декор мероприятий',
             desc: 'Флористическое оформление свадебных арок, президиумов, банкетных залов и фотозон в Горловке',
             items: [
-              { cat: 'Оформление и декор мероприятий', title: 'Смотреть<br/>всё (6)', img: './3d/3d_wedding_arch.png' },
+              { cat: 'Оформление и декор мероприятий', title: 'Весь декор<br/>(6)', img: './3d/3d_wedding_arch.png' },
               { cat: 'Оформление свадебной арки', title: 'Свадебные<br/>арки', img: './3d/3d_wedding_arch.png' },
-              { cat: 'Декор президиума', title: 'Декор залов<br/>и столов', img: './3d/3d_hall_decor.png' },
-              { cat: 'Композиции на столы', title: 'Композиции<br/>на столы', img: './3d/3d_basket.png' },
-              { cat: 'Оформление фотозоны', title: 'Фотозоны<br/>для событий', img: './3d/3d_photozone.png' }
+              { cat: 'Декор президиума', title: 'Президиумы<br/>и залы', img: './3d/3d_hall_decor.png' },
+              { cat: 'Композиции на столы', title: 'Столы и<br/>банкеты', img: './3d/3d_hall_decor.png' },
+              { cat: 'Оформление фотозоны', title: 'Фотозоны и<br/>события', img: './3d/3d_photozone.png' },
+              { cat: 'Цветы', title: 'Цветы и<br/>букеты', img: './3d/3d_all_flowers.png' },
+              { cat: 'Гелиевые шары', title: 'Гелиевые<br/>шары', img: './3d/3d_balloons_set.png' }
             ]
           },
           gifts: {
             title: 'Подарки и декор',
             parentName: 'Подарки и декор',
-            desc: 'Мягкие игрушки, подарочные боксы, открытки и сувениры к праздникам',
+            desc: 'Мягкие игрушки, сувениры, фоторамки и праздничный декор с доставкой',
             items: [
-              { cat: 'Подарки и декор', title: 'Смотреть<br/>всё (27)', img: './3d/3d_gift_box.png' },
-              { cat: 'Мягкие игрушки', title: 'Мягкие<br/>игрушки', img: './3d/3d_toys.png' },
-              { cat: 'Подарочные наборы', title: 'Подарочные<br/>наборы', img: './3d/3d_gift_box.png' },
-              { cat: 'Сувениры и декор', title: 'Сувениры<br/>и декор', img: './3d/3d_card.png' },
-              { cat: 'Открытки', title: 'Дизайнерские<br/>открытки', img: './3d/3d_card.png' }
+              { cat: 'Подарки и декор', title: 'Все подарки<br/>(31)', img: './3d/3d_gift_box.png' },
+              { cat: 'Мягкие игрушки', title: 'Мягкие<br/>игрушки (7)', img: './3d/3d_toys.png' },
+              { cat: 'Сувениры и статуэтки', title: 'Сувениры и<br/>статуэтки', img: './3d/3d_gift_box.png' },
+              { cat: 'Фоторамки и декор', title: 'Фоторамки и<br/>интерьер', img: './3d/3d_card.png' },
+              { cat: 'Цветы', title: 'Цветы и<br/>букеты', img: './3d/3d_all_flowers.png' },
+              { cat: 'Гелиевые шары', title: 'Гелиевые<br/>шары', img: './3d/3d_balloons_set.png' }
             ]
           },
           balloons: {
-            title: 'Гелиевые шары',
-            parentName: 'Гелиевые шары',
-            desc: 'Гелиевые шары, наборы, фонтаны и большие коробки с сюрпризом в Горловке',
+            title: 'Воздушные шары',
+            parentName: 'Воздушные шары',
+            desc: 'Гелиевые шары, праздничные наборы и большие связки в Горловке',
             items: [
-              { cat: 'Гелиевые шары', title: 'Смотреть<br/>всё (4)', img: './3d/3d_balloons_set.png' },
-              { cat: 'Наборы шаров', title: 'Наборы и<br/>фонтаны', img: './3d/3d_balloons_set.png' },
-              { cat: 'Шары в коробке', title: 'Шары в<br/>коробке', img: './3d/3d_balloons_box.png' },
-              { cat: 'Шары с надписями', title: 'Шары с<br/>надписями', img: './3d/3d_balloon_single.png' }
+              { cat: 'Гелиевые шары', title: 'Все шары<br/>(4)', img: './3d/3d_balloons_set.png' },
+              { cat: 'Большие связки', title: 'Большие<br/>связки (31)', img: './3d/3d_balloons_box.png' },
+              { cat: 'Праздничные фонтаны', title: 'Праздничные<br/>фонтаны', img: './3d/3d_balloons_set.png' },
+              { cat: 'Компактные наборы', title: 'Наборы шаров<br/>(7-10)', img: './3d/3d_balloon_single.png' },
+              { cat: 'Цветы', title: 'Цветы и<br/>букеты', img: './3d/3d_all_flowers.png' },
+              { cat: 'Подарки и декор', title: 'Подарки и<br/>декор', img: './3d/3d_gift_box.png' }
             ]
           },
           all: {
@@ -3856,11 +3925,11 @@ ${allCardsHtml}
             parentName: 'Каталог товаров',
             desc: 'Все товары магазина «Цветочный Рай» с быстрой доставкой по Горловке',
             items: [
-              { cat: 'all', title: 'Смотреть<br/>всё', img: './3d/3d_all_flowers.png' },
-              { cat: 'Цветы', title: 'Цветы и<br/>букеты', img: './3d/3d_all_flowers.png' },
-              { cat: 'Оформление и декор мероприятий', title: 'Декор<br/>мероприятий', img: './3d/3d_wedding_arch.png' },
-              { cat: 'Подарки и декор', title: 'Подарки и<br/>декор', img: './3d/3d_gift_box.png' },
-              { cat: 'Гелиевые шары', title: 'Гелиевые<br/>шары', img: './3d/3d_balloons_set.png' },
+              { cat: 'all', title: 'Смотреть<br/>всё (260)', img: './3d/3d_all_flowers.png' },
+              { cat: 'Цветы', title: 'Цветы и<br/>букеты (225)', img: './3d/3d_all_flowers.png' },
+              { cat: 'Оформление и декор мероприятий', title: 'Декор<br/>событий (6)', img: './3d/3d_wedding_arch.png' },
+              { cat: 'Подарки и декор', title: 'Подарки и<br/>декор (31)', img: './3d/3d_gift_box.png' },
+              { cat: 'Гелиевые шары', title: 'Гелиевые<br/>шары (4)', img: './3d/3d_balloons_set.png' },
               { cat: 'Сборные букеты размер M', title: 'Авторские<br/>букеты', img: './3d/3d_author.png' },
               { cat: 'Монобукеты', title: 'Монобукеты<br/>(розы)', img: './3d/3d_mono.png' },
               { cat: 'В коробках', title: 'В коробках<br/>и корзинах', img: './3d/3d_flower_box.png' },
@@ -3873,9 +3942,9 @@ ${allCardsHtml}
         function getCategoryGroup(catName) {
           var c = (catName || '').toLowerCase().trim();
           if (!c || c === 'all' || c === 'все товары' || c === 'весь каталог') return 'all';
-          if (c.indexOf('оформлен') !== -1 || c.indexOf('мероприят') !== -1 || c.indexOf('арк') !== -1 || c.indexOf('президиум') !== -1 || c.indexOf('фотозон') !== -1) return 'decor';
-          if (c.indexOf('подарк') !== -1 || c.indexOf('игрушк') !== -1 || c.indexOf('сувенир') !== -1 || c.indexOf('открытк') !== -1 || c.indexOf('набор') !== -1) return 'gifts';
-          if (c.indexOf('шар') !== -1) return 'balloons';
+          if (c.indexOf('оформлен') !== -1 || c.indexOf('мероприят') !== -1 || c.indexOf('арк') !== -1 || c.indexOf('президиум') !== -1 || c.indexOf('фотозон') !== -1 || c.indexOf('весь декор') !== -1) return 'decor';
+          if (c.indexOf('подарк') !== -1 || c.indexOf('игрушк') !== -1 || c.indexOf('сувенир') !== -1 || c.indexOf('статуэт') !== -1 || c.indexOf('рамк') !== -1 || c.indexOf('фоторамк') !== -1 || c.indexOf('открытк') !== -1 || c.indexOf('набор') !== -1) return 'gifts';
+          if (c.indexOf('шар') !== -1 || c.indexOf('связк') !== -1 || c.indexOf('фонтан') !== -1) return 'balloons';
           return 'flowers';
         }
 
@@ -3884,6 +3953,48 @@ ${allCardsHtml}
         var btnPageRibbonPrev = document.getElementById('btn-page-ribbon-prev');
         var btnPageRibbonNext = document.getElementById('btn-page-ribbon-next');
 
+        function bindRibbonButtons() {
+          if (!pageRibbonTrack) return;
+          pageRibbonTrack.querySelectorAll('.ribbon-btn').forEach(function(btn) {
+            var touchStartX = 0;
+            var touchStartY = 0;
+            var touchStartTime = 0;
+            var handledTap = false;
+
+            btn.addEventListener('touchstart', function(e) {
+              if (e.touches && e.touches.length === 1) {
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+                touchStartTime = Date.now();
+                handledTap = false;
+              }
+            }, { passive: true });
+
+            btn.addEventListener('touchend', function(e) {
+              if (e.changedTouches && e.changedTouches.length === 1) {
+                var dx = Math.abs(e.changedTouches[0].clientX - touchStartX);
+                var dy = Math.abs(e.changedTouches[0].clientY - touchStartY);
+                var dt = Date.now() - touchStartTime;
+                if (dx < 16 && dy < 16 && dt < 450) {
+                  handledTap = true;
+                  var cat = btn.getAttribute('data-cat') || 'all';
+                  navigateToView('catalog', cat, pageSearchInput ? pageSearchInput.value : '');
+                }
+              }
+            }, { passive: true });
+
+            btn.addEventListener('click', function(e) {
+              e.preventDefault();
+              if (handledTap) {
+                handledTap = false;
+                return;
+              }
+              var cat = btn.getAttribute('data-cat') || 'all';
+              navigateToView('catalog', cat, pageSearchInput ? pageSearchInput.value : '');
+            });
+          });
+        }
+
         function renderRibbonForGroup(groupKey, activeCatClean) {
           if (!pageRibbonTrack) return;
           var groupData = ribbonGroups[groupKey] || ribbonGroups.flowers;
@@ -3891,31 +4002,33 @@ ${allCardsHtml}
           if (currentRenderedGroup !== groupKey) {
             currentRenderedGroup = groupKey;
             pageRibbonTrack.innerHTML = groupData.items.map(function(item) {
-              return '<div class="ribbon-btn" data-cat="' + item.cat + '">' +
+              return '<button type="button" class="ribbon-btn" data-cat="' + item.cat + '">' +
                 '<span class="ribbon-btn__text">' + item.title + '</span>' +
-                '<img src="' + item.img + '" alt="" class="ribbon-btn__img" />' +
-              '</div>';
+                '<img src="' + item.img + '" alt="" class="ribbon-btn__img" loading="lazy" />' +
+              '</button>';
             }).join('');
 
-            pageRibbonTrack.querySelectorAll('.ribbon-btn').forEach(function(btn) {
-              btn.addEventListener('click', function(e) {
-                e.preventDefault();
-                var cat = btn.getAttribute('data-cat') || 'all';
-                navigateToView('catalog', cat, pageSearchInput ? pageSearchInput.value : '');
-              });
-            });
-
+            bindRibbonButtons();
             pageRibbonTrack.scrollLeft = 0;
           }
 
+          var activeBtn = null;
           pageRibbonTrack.querySelectorAll('.ribbon-btn').forEach(function(btn) {
             var btnCat = (btn.getAttribute('data-cat') || '').toLowerCase().trim();
-            if (btnCat === activeCatClean || (activeCatClean === 'all' && btnCat === 'all') || (activeCatClean === 'цветы' && btnCat === 'цветы')) {
+            if (btnCat === activeCatClean || (activeCatClean === 'all' && btnCat === 'all') || ((activeCatClean === 'цветы' || activeCatClean === 'все цветы') && btnCat === 'цветы')) {
               btn.classList.add('active');
+              activeBtn = btn;
             } else {
               btn.classList.remove('active');
             }
           });
+
+          if (activeBtn) {
+            try {
+              var targetLeft = activeBtn.offsetLeft - (pageRibbonTrack.clientWidth / 2) + (activeBtn.clientWidth / 2);
+              pageRibbonTrack.scrollTo({ left: Math.max(0, targetLeft), behavior: 'smooth' });
+            } catch(e) {}
+          }
 
           setTimeout(updateRibbonArrowStates, 60);
         }
@@ -4096,9 +4209,16 @@ ${allCardsHtml}
             }
 
             filterPageCatalog(currentActiveCategory, pageSearchInput ? pageSearchInput.value : '');
-            if (!alreadyInCatalog) {
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
+            setTimeout(function() {
+              var catalogGrid = document.getElementById('catalog-page-grid');
+              if (catalogGrid) {
+                var rect = catalogGrid.getBoundingClientRect();
+                var topPos = rect.top + (window.pageYOffset || window.scrollY || 0) - 170;
+                window.scrollTo({ top: Math.max(0, topPos), behavior: 'smooth' });
+              } else {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }
+            }, 60);
 
             setMobNavActive(mobNavCatalog);
 
@@ -4163,8 +4283,8 @@ ${allCardsHtml}
               catMatch = allCats.indexOf('размер l') !== -1 || cat.indexOf('размер l') !== -1 || allCats.indexOf('больш') !== -1;
             } else if (cleanCat.indexOf('wow') !== -1) {
               catMatch = cat.indexOf('wow') !== -1 || allCats.indexOf('wow') !== -1 || titleLower.indexOf('101') !== -1;
-            } else if (cleanCat.indexOf('в коробках') !== -1) {
-              catMatch = cat.indexOf('коробк') !== -1 || allCats.indexOf('коробк') !== -1 || titleLower.indexOf('коробк') !== -1;
+            } else if (cleanCat.indexOf('в коробках') !== -1 || cleanCat.indexOf('коробк') !== -1) {
+              catMatch = cat.indexOf('коробк') !== -1 || allCats.indexOf('коробк') !== -1 || titleLower.indexOf('коробк') !== -1 || titleLower.indexOf('шляпн') !== -1 || cat.indexOf('композиц') !== -1 || allCats.indexOf('в корзинках') !== -1;
             } else if (cleanCat.indexOf('в корзинках') !== -1 || cleanCat.indexOf('корзин') !== -1) {
               catMatch = cat.indexOf('корзин') !== -1 || allCats.indexOf('корзин') !== -1 || titleLower.indexOf('корзин') !== -1;
             } else if (cleanCat.indexOf('невест') !== -1 || cleanCat.indexOf('свадеб') !== -1) {
@@ -4177,26 +4297,32 @@ ${allCardsHtml}
               catMatch = cat.indexOf('сезон') !== -1 || allCats.indexOf('сезон') !== -1;
             } else if (cleanCat.indexOf('растен') !== -1) {
               catMatch = cat.indexOf('растен') !== -1 || allCats.indexOf('растен') !== -1;
-            } else if (cleanCat === 'оформление и декор мероприятий' || cleanCat.indexOf('декор мероприят') !== -1) {
+            } else if (cleanCat === 'оформление и декор мероприятий' || cleanCat.indexOf('весь декор') !== -1 || cleanCat.indexOf('декор мероприят') !== -1) {
               catMatch = cat.indexOf('оформлен') !== -1 || allCats.indexOf('оформлен') !== -1 || titleLower.indexOf('арк') !== -1 || titleLower.indexOf('президиум') !== -1 || titleLower.indexOf('фотозон') !== -1;
             } else if (cleanCat.indexOf('арк') !== -1) {
-              catMatch = titleLower.indexOf('арк') !== -1 || allCats.indexOf('арк') !== -1;
-            } else if (cleanCat.indexOf('президиум') !== -1) {
-              catMatch = titleLower.indexOf('президиум') !== -1 || titleLower.indexOf('стол') !== -1 || allCats.indexOf('президиум') !== -1;
-            } else if (cleanCat.indexOf('фотозон') !== -1) {
-              catMatch = titleLower.indexOf('фотозон') !== -1 || allCats.indexOf('фотозон') !== -1;
-            } else if (cleanCat === 'подарки и декор' || cleanCat === 'подарки') {
+              catMatch = titleLower.indexOf('арк') !== -1 || allCats.indexOf('арк') !== -1 || titleLower.indexOf('свадеб') !== -1;
+            } else if (cleanCat.indexOf('президиум') !== -1 || cleanCat.indexOf('залов') !== -1) {
+              catMatch = titleLower.indexOf('президиум') !== -1 || titleLower.indexOf('зал') !== -1 || titleLower.indexOf('презентац') !== -1 || allCats.indexOf('президиум') !== -1;
+            } else if (cleanCat.indexOf('стол') !== -1 || cleanCat.indexOf('банкет') !== -1) {
+              catMatch = titleLower.indexOf('стол') !== -1 || titleLower.indexOf('банкет') !== -1 || titleLower.indexOf('выездн') !== -1 || allCats.indexOf('стол') !== -1;
+            } else if (cleanCat.indexOf('фотозон') !== -1 || cleanCat.indexOf('событ') !== -1) {
+              catMatch = titleLower.indexOf('фотозон') !== -1 || titleLower.indexOf('юбиле') !== -1 || allCats.indexOf('фотозон') !== -1;
+            } else if (cleanCat === 'подарки и декор' || cleanCat === 'подарки' || cleanCat.indexOf('все подарки') !== -1) {
               catMatch = (cat.indexOf('подарк') !== -1 || allCats.indexOf('подарк') !== -1) && cat.indexOf('растен') === -1;
             } else if (cleanCat.indexOf('игрушк') !== -1) {
-              catMatch = titleLower.indexOf('мишка') !== -1 || titleLower.indexOf('зайка') !== -1 || titleLower.indexOf('гном') !== -1 || titleLower.indexOf('кукла') !== -1;
-            } else if (cleanCat.indexOf('набор') !== -1 && groupKey === 'gifts') {
-              catMatch = (cat.indexOf('набор') !== -1 || allCats.indexOf('набор') !== -1 || titleLower.indexOf('набор') !== -1 || titleLower.indexOf('бокс') !== -1) && cat.indexOf('шар') === -1;
-            } else if (cleanCat.indexOf('открытк') !== -1) {
-              catMatch = cat.indexOf('открытк') !== -1 || allCats.indexOf('открытк') !== -1 || titleLower.indexOf('открытк') !== -1;
-            } else if (cleanCat.indexOf('сувенир') !== -1) {
-              catMatch = cat.indexOf('сувенир') !== -1 || allCats.indexOf('сувенир') !== -1;
-            } else if (cleanCat === 'гелиевые шары' || cleanCat.indexOf('шар') !== -1) {
+              catMatch = titleLower.indexOf('мишка') !== -1 || titleLower.indexOf('зайка') !== -1 || titleLower.indexOf('гном') !== -1 || titleLower.indexOf('кукла') !== -1 || titleLower.indexOf('lucky') !== -1 || titleLower.indexOf('lori') !== -1;
+            } else if (cleanCat.indexOf('сувенир') !== -1 || cleanCat.indexOf('статуэт') !== -1) {
+              catMatch = titleLower.indexOf('статуэт') !== -1 || titleLower.indexOf('шкатулк') !== -1 || titleLower.indexOf('часы') !== -1;
+            } else if (cleanCat.indexOf('рамк') !== -1 || cleanCat.indexOf('фоторамк') !== -1 || cleanCat.indexOf('интерьер') !== -1) {
+              catMatch = titleLower.indexOf('рамк') !== -1 || titleLower.indexOf('бокал') !== -1;
+            } else if (cleanCat === 'гелиевые шары' || cleanCat.indexOf('все шары') !== -1) {
               catMatch = cat.indexOf('шар') !== -1 || allCats.indexOf('шар') !== -1;
+            } else if (cleanCat.indexOf('31') !== -1 || cleanCat.indexOf('большие связки') !== -1) {
+              catMatch = titleLower.indexOf('31') !== -1;
+            } else if (cleanCat.indexOf('фонтан') !== -1 || cleanCat.indexOf('10') !== -1 || cleanCat.indexOf('11') !== -1) {
+              catMatch = titleLower.indexOf('10') !== -1 || titleLower.indexOf('11') !== -1;
+            } else if (cleanCat.indexOf('компакт') !== -1 || cleanCat.indexOf('7') !== -1) {
+              catMatch = titleLower.indexOf('7') !== -1;
             } else {
               catMatch = cat.indexOf(cleanCat) !== -1 || allCats.indexOf(cleanCat) !== -1 || titleLower.indexOf(cleanCat) !== -1;
             }
@@ -4257,9 +4383,37 @@ ${allCardsHtml}
         }
 
         document.querySelectorAll('.hub-card__header, .hub-cell, .hub-cell__more-btn').forEach(function(el) {
+          var touchStartX = 0, touchStartY = 0, touchStartTime = 0, handledTap = false;
+
+          el.addEventListener('touchstart', function(e) {
+            if (e.touches && e.touches.length === 1) {
+              touchStartX = e.touches[0].clientX;
+              touchStartY = e.touches[0].clientY;
+              touchStartTime = Date.now();
+              handledTap = false;
+            }
+          }, { passive: true });
+
+          el.addEventListener('touchend', function(e) {
+            if (e.changedTouches && e.changedTouches.length === 1) {
+              var dx = Math.abs(e.changedTouches[0].clientX - touchStartX);
+              var dy = Math.abs(e.changedTouches[0].clientY - touchStartY);
+              var dt = Date.now() - touchStartTime;
+              if (dx < 16 && dy < 16 && dt < 450) {
+                handledTap = true;
+                var cat = el.getAttribute('data-cat') || 'Цветы';
+                navigateToView('catalog', cat);
+              }
+            }
+          }, { passive: true });
+
           el.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
+            if (handledTap) {
+              handledTap = false;
+              return;
+            }
             var cat = el.getAttribute('data-cat') || 'Цветы';
             navigateToView('catalog', cat);
           });

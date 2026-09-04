@@ -1493,6 +1493,8 @@ button:active,
   box-shadow: 0 2px 6px rgba(45, 106, 79, 0.05);
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .ribbon-btn:hover {
@@ -1517,6 +1519,7 @@ button:active,
   max-width: 56%;
   text-align: left;
   position: relative;
+  pointer-events: none;
 }
 
 .ribbon-btn.active .ribbon-btn__text {

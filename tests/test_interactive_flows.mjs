@@ -46,7 +46,7 @@ server.listen(4178, async () => {
   // 1. Test Desktop 1440px
   console.log('--- Testing Desktop 1440px ---');
   await page.setViewport({ width: 1440, height: 900, isMobile: false });
-  await page.goto('http://localhost:4178', { waitUntil: 'networkidle0' });
+  await page.goto('http://localhost:4178', { waitUntil: 'load' });
 
   // Test Header Search Trigger
   const searchBtnWorks = await page.evaluate(() => {
@@ -185,7 +185,7 @@ server.listen(4178, async () => {
   // 2. Test Mobile 375px
   console.log('\n--- Testing Mobile 375px ---');
   await page.setViewport({ width: 375, height: 667, isMobile: true });
-  await page.goto('http://localhost:4178', { waitUntil: 'networkidle0' });
+  await page.goto('http://localhost:4178', { waitUntil: 'load' });
 
   // Test Mobile Navigation switching
   const mobileNavSwitch = await page.evaluate(() => {
