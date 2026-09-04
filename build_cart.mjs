@@ -2256,7 +2256,7 @@ ${allCardsHtml}
 
         function findLocalStreetMatches(rawInput) {
           var parsed = extractStreetAndHouse(rawInput);
-          var norm = parsed.street;
+          var norm = (parsed.street || '').toLowerCase();
           if (!norm || norm.length < 1) return [];
           
           var searchWords = norm.split(' ').filter(function(w) {
@@ -2809,6 +2809,12 @@ ${allCardsHtml}
               deliveryInfo.isAddressChosen = true;
             } else if (!deliveryInfo.isAddressChosen) {
               showToast('Пожалуйста, выберите адрес на карте или введите улицу');
+              return;
+            }
+
+            // Require house number (check if address contains at least one digit)
+            if (!/\d/.test(deliveryInfo.address)) {
+              showToast('Пожалуйста, укажите номер дома');
               return;
             }
 
@@ -3876,44 +3882,6 @@ ${allCardsHtml}
         }
 
         if (pageRibbonTrack) {
-          var _ribbonTouchStartX = 0;
-          var _ribbonTouchStartY = 0;
-          var _ribbonScrolled = false;
-          var _ribbonScrollStartLeft = 0;
-
-          pageRibbonTrack.addEventListener('touchstart', function(e) {
-            if (e.touches && e.touches[0]) {
-              _ribbonTouchStartX = e.touches[0].clientX;
-              _ribbonTouchStartY = e.touches[0].clientY;
-              _ribbonScrollStartLeft = pageRibbonTrack.scrollLeft;
-              _ribbonScrolled = false;
-            }
-          }, { passive: true });
-
-          pageRibbonTrack.addEventListener('touchmove', function(e) {
-            if (e.touches && e.touches[0]) {
-              var dx = Math.abs(e.touches[0].clientX - _ribbonTouchStartX);
-              var dy = Math.abs(e.touches[0].clientY - _ribbonTouchStartY);
-              if (dx > 6 || dy > 6) {
-                _ribbonScrolled = true;
-              }
-            }
-          }, { passive: true });
-
-          pageRibbonTrack.addEventListener('touchend', function(e) {
-            var scrollDelta = Math.abs(pageRibbonTrack.scrollLeft - _ribbonScrollStartLeft);
-            if (_ribbonScrolled && scrollDelta > 8) return;
-            var touch = e.changedTouches && e.changedTouches[0];
-            if (!touch) return;
-            var btn = document.elementFromPoint(touch.clientX, touch.clientY);
-            if (!btn) return;
-            var ribbonBtn = btn.closest('.ribbon-btn');
-            if (!ribbonBtn) return;
-            e.preventDefault();
-            var cat = ribbonBtn.getAttribute('data-cat') || 'all';
-            navigateToView('catalog', cat, pageSearchInput ? pageSearchInput.value : '');
-          }, { passive: false });
-
           pageRibbonTrack.addEventListener('click', function(e) {
             var btn = e.target.closest('.ribbon-btn');
             if (!btn) return;
