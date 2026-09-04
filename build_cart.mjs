@@ -3795,31 +3795,80 @@ ${allCardsHtml}
         });
 
         // --- 6. CATALOG DYNAMIC RIBBON DATA & UNIFIED CATEGORIES (NO ISOLATED GROUPS, ALL CATEGORIES ALWAYS AVAILABLE) ---
-        var UNIFIED_CAT_RIBBON = [
-          { cat: 'all', title: 'Все товары<br/>(260)', img: './3d/3d_all_flowers.png' },
-          { cat: 'Цветы', title: 'Все цветы<br/>(225)', img: './3d/3d_all_flowers.png' },
-          { cat: 'Сборные букеты размер M', title: 'Авторские<br/>букеты M', img: './3d/3d_author.png' },
-          { cat: 'Монобукеты', title: 'Монобукеты<br/>(розы)', img: './3d/3d_mono.png' },
-          { cat: 'Сборные букеты размер S', title: 'Классические<br/>букеты S', img: './3d/3d_classic.png' },
-          { cat: 'Сборные букеты размер L', title: 'Большие<br/>букеты L', img: './3d/3d_wow.png' },
-          { cat: 'WOW-букеты', title: 'WOW-букеты<br/>101 роза', img: './3d/3d_wow.png' },
-          { cat: 'В коробках', title: 'Цветы в<br/>коробках', img: './3d/3d_flower_box.png' },
-          { cat: 'В корзинках', title: 'Цветы в<br/>корзинах', img: './3d/3d_basket.png' },
-          { cat: 'Букет Невесты', title: 'Свадебные<br/>букеты', img: './3d/3d_wedding.png' },
-          { cat: 'Гелиевые шары', title: 'Гелиевые<br/>шары (4)', img: './3d/3d_balloons_set.png' },
-          { cat: 'Наборы шаров', title: 'Наборы и<br/>фонтаны', img: './3d/3d_balloons_set.png' },
-          { cat: 'Шары в коробке', title: 'Шары в<br/>коробке', img: './3d/3d_balloons_box.png' },
-          { cat: 'Подарки и декор', title: 'Подарки и<br/>декор (27)', img: './3d/3d_gift_box.png' },
-          { cat: 'Мягкие игрушки', title: 'Мягкие<br/>игрушки', img: './3d/3d_toys.png' },
-          { cat: 'Подарочные наборы', title: 'Подарочные<br/>наборы', img: './3d/3d_gift_box.png' },
-          { cat: 'Оформление и декор мероприятий', title: 'Декор<br/>мероприятий (6)', img: './3d/3d_wedding_arch.png' },
-          { cat: 'Оформление свадебной арки', title: 'Свадебные<br/>арки', img: './3d/3d_wedding_arch.png' },
-          { cat: 'Декор президиума', title: 'Декор залов<br/>и столов', img: './3d/3d_hall_decor.png' },
-          { cat: 'Комнатные растения', title: 'Комнатные<br/>растения', img: './3d/3d_plant.png' },
-          { cat: 'С сухоцветами', title: 'Букеты с<br/>сухоцветами', img: './3d/3d_dried.png' },
-          { cat: 'Сезонные композиции', title: 'Сезонные<br/>цветы', img: './3d/3d_seasonal.png' },
-          { cat: 'Ювелирная флористика', title: 'Ювелирная<br/>флористика', img: './3d/3d_composition.png' }
-        ];
+        var ribbonGroups = {
+          flowers: {
+            title: 'Цветы и букеты',
+            parentName: 'Цветы и букеты',
+            desc: 'Свежие авторские и монобукеты, шляпные коробки, корзины, свадебные и сезонные цветы в Горловке',
+            items: [
+              { cat: 'Цветы', title: 'Все цветы<br/>(225)', img: './3d/3d_all_flowers.png' },
+              { cat: 'Сборные букеты размер M', title: 'Авторские<br/>букеты M', img: './3d/3d_author.png' },
+              { cat: 'Монобукеты', title: 'Монобукеты<br/>(розы)', img: './3d/3d_mono.png' },
+              { cat: 'Сборные букеты размер S', title: 'Классические<br/>букеты S', img: './3d/3d_classic.png' },
+              { cat: 'Сборные букеты размер L', title: 'Большие<br/>букеты L', img: './3d/3d_wow.png' },
+              { cat: 'WOW-букеты', title: 'WOW-букеты<br/>101 роза', img: './3d/3d_wow.png' },
+              { cat: 'В коробках', title: 'Цветы в<br/>коробках', img: './3d/3d_flower_box.png' },
+              { cat: 'В корзинках', title: 'Цветы в<br/>корзинах', img: './3d/3d_basket.png' },
+              { cat: 'Букет Невесты', title: 'Свадебные<br/>букеты', img: './3d/3d_wedding.png' },
+              { cat: 'Ювелирная флористика', title: 'Ювелирная<br/>флористика', img: './3d/3d_composition.png' },
+              { cat: 'С сухоцветами', title: 'Букеты с<br/>сухоцветами', img: './3d/3d_dried.png' },
+              { cat: 'Сезонные композиции', title: 'Сезонные<br/>цветы', img: './3d/3d_seasonal.png' },
+              { cat: 'Комнатные растения', title: 'Комнатные<br/>растения', img: './3d/3d_plant.png' }
+            ]
+          },
+          decor: {
+            title: 'Оформление и декор мероприятий',
+            parentName: 'Оформление и декор мероприятий',
+            desc: 'Флористическое оформление свадебных арок, президиумов, банкетных залов и фотозон в Горловке',
+            items: [
+              { cat: 'Оформление и декор мероприятий', title: 'Смотреть<br/>всё (6)', img: './3d/3d_wedding_arch.png' },
+              { cat: 'Оформление свадебной арки', title: 'Свадебные<br/>арки', img: './3d/3d_wedding_arch.png' },
+              { cat: 'Декор президиума', title: 'Декор залов<br/>и столов', img: './3d/3d_hall_decor.png' },
+              { cat: 'Композиции на столы', title: 'Композиции<br/>на столы', img: './3d/3d_basket.png' },
+              { cat: 'Оформление фотозоны', title: 'Фотозоны<br/>для событий', img: './3d/3d_photozone.png' }
+            ]
+          },
+          gifts: {
+            title: 'Подарки и декор',
+            parentName: 'Подарки и декор',
+            desc: 'Мягкие игрушки, подарочные боксы, открытки и сувениры к праздникам',
+            items: [
+              { cat: 'Подарки и декор', title: 'Смотреть<br/>всё (27)', img: './3d/3d_gift_box.png' },
+              { cat: 'Мягкие игрушки', title: 'Мягкие<br/>игрушки', img: './3d/3d_toys.png' },
+              { cat: 'Подарочные наборы', title: 'Подарочные<br/>наборы', img: './3d/3d_gift_box.png' },
+              { cat: 'Сувениры и декор', title: 'Сувениры<br/>и декор', img: './3d/3d_card.png' },
+              { cat: 'Открытки', title: 'Дизайнерские<br/>открытки', img: './3d/3d_card.png' }
+            ]
+          },
+          balloons: {
+            title: 'Гелиевые шары',
+            parentName: 'Гелиевые шары',
+            desc: 'Гелиевые шары, наборы, фонтаны и большие коробки с сюрпризом в Горловке',
+            items: [
+              { cat: 'Гелиевые шары', title: 'Смотреть<br/>всё (4)', img: './3d/3d_balloons_set.png' },
+              { cat: 'Наборы шаров', title: 'Наборы и<br/>фонтаны', img: './3d/3d_balloons_set.png' },
+              { cat: 'Шары в коробке', title: 'Шары в<br/>коробке', img: './3d/3d_balloons_box.png' },
+              { cat: 'Шары с надписями', title: 'Шары с<br/>надписями', img: './3d/3d_balloon_single.png' }
+            ]
+          },
+          all: {
+            title: 'Весь каталог товаров',
+            parentName: 'Каталог товаров',
+            desc: 'Все товары магазина «Цветочный Рай» с быстрой доставкой по Горловке',
+            items: [
+              { cat: 'all', title: 'Смотреть<br/>всё', img: './3d/3d_all_flowers.png' },
+              { cat: 'Цветы', title: 'Цветы и<br/>букеты', img: './3d/3d_all_flowers.png' },
+              { cat: 'Оформление и декор мероприятий', title: 'Декор<br/>мероприятий', img: './3d/3d_wedding_arch.png' },
+              { cat: 'Подарки и декор', title: 'Подарки и<br/>декор', img: './3d/3d_gift_box.png' },
+              { cat: 'Гелиевые шары', title: 'Гелиевые<br/>шары', img: './3d/3d_balloons_set.png' },
+              { cat: 'Сборные букеты размер M', title: 'Авторские<br/>букеты', img: './3d/3d_author.png' },
+              { cat: 'Монобукеты', title: 'Монобукеты<br/>(розы)', img: './3d/3d_mono.png' },
+              { cat: 'В коробках', title: 'В коробках<br/>и корзинах', img: './3d/3d_flower_box.png' },
+              { cat: 'Мягкие игрушки', title: 'Мягкие<br/>игрушки', img: './3d/3d_toys.png' },
+              { cat: 'Комнатные растения', title: 'Комнатные<br/>растения', img: './3d/3d_plant.png' }
+            ]
+          }
+        };
 
         function getCategoryGroup(catName) {
           var c = (catName || '').toLowerCase().trim();
@@ -3830,44 +3879,43 @@ ${allCardsHtml}
           return 'flowers';
         }
 
-        var isRibbonRendered = false;
+        var currentRenderedGroup = null;
         var pageRibbonTrack = document.getElementById('page-ribbon-track');
         var btnPageRibbonPrev = document.getElementById('btn-page-ribbon-prev');
         var btnPageRibbonNext = document.getElementById('btn-page-ribbon-next');
 
         function renderRibbonForGroup(groupKey, activeCatClean) {
           if (!pageRibbonTrack) return;
+          var groupData = ribbonGroups[groupKey] || ribbonGroups.flowers;
 
-          if (!isRibbonRendered || pageRibbonTrack.children.length === 0) {
-            isRibbonRendered = true;
-            pageRibbonTrack.innerHTML = UNIFIED_CAT_RIBBON.map(function(item) {
+          if (currentRenderedGroup !== groupKey) {
+            currentRenderedGroup = groupKey;
+            pageRibbonTrack.innerHTML = groupData.items.map(function(item) {
               return '<div class="ribbon-btn" data-cat="' + item.cat + '">' +
                 '<span class="ribbon-btn__text">' + item.title + '</span>' +
                 '<img src="' + item.img + '" alt="" class="ribbon-btn__img" />' +
               '</div>';
             }).join('');
+
+            pageRibbonTrack.querySelectorAll('.ribbon-btn').forEach(function(btn) {
+              btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                var cat = btn.getAttribute('data-cat') || 'all';
+                navigateToView('catalog', cat, pageSearchInput ? pageSearchInput.value : '');
+              });
+            });
+
+            pageRibbonTrack.scrollLeft = 0;
           }
 
-          var activeBtn = null;
           pageRibbonTrack.querySelectorAll('.ribbon-btn').forEach(function(btn) {
             var btnCat = (btn.getAttribute('data-cat') || '').toLowerCase().trim();
-            var isMatch = (btnCat === activeCatClean) ||
-                          (activeCatClean === 'all' && btnCat === 'all') ||
-                          ((activeCatClean === 'цветы' || activeCatClean === 'все цветы') && btnCat === 'цветы');
-            if (isMatch) {
+            if (btnCat === activeCatClean || (activeCatClean === 'all' && btnCat === 'all') || (activeCatClean === 'цветы' && btnCat === 'цветы')) {
               btn.classList.add('active');
-              activeBtn = btn;
             } else {
               btn.classList.remove('active');
             }
           });
-
-          if (activeBtn) {
-            try {
-              var targetLeft = activeBtn.offsetLeft - (pageRibbonTrack.clientWidth / 2) + (activeBtn.clientWidth / 2);
-              pageRibbonTrack.scrollTo({ left: Math.max(0, targetLeft), behavior: 'smooth' });
-            } catch(e) {}
-          }
 
           setTimeout(updateRibbonArrowStates, 60);
         }
@@ -3881,7 +3929,19 @@ ${allCardsHtml}
           btnPageRibbonNext.style.cursor = pageRibbonTrack.scrollLeft >= maxScroll - 8 ? 'default' : 'pointer';
         }
 
-        if (pageRibbonTrack) {
+        if (pageRibbonTrack && btnPageRibbonPrev && btnPageRibbonNext) {
+          btnPageRibbonPrev.addEventListener('click', function(e) {
+            e.preventDefault();
+            scrollTrackToCard(pageRibbonTrack, -1);
+          });
+          btnPageRibbonNext.addEventListener('click', function(e) {
+            e.preventDefault();
+            scrollTrackToCard(pageRibbonTrack, 1);
+          });
+          pageRibbonTrack.addEventListener('scroll', updateRibbonArrowStates, { passive: true });
+          window.addEventListener('resize', updateRibbonArrowStates);
+          setTimeout(updateRibbonArrowStates, 100);
+
           pageRibbonTrack.addEventListener('click', function(e) {
             var btn = e.target.closest('.ribbon-btn');
             if (!btn) return;
@@ -3889,20 +3949,6 @@ ${allCardsHtml}
             var cat = btn.getAttribute('data-cat') || 'all';
             navigateToView('catalog', cat, pageSearchInput ? pageSearchInput.value : '');
           });
-
-          if (btnPageRibbonPrev && btnPageRibbonNext) {
-            btnPageRibbonPrev.addEventListener('click', function(e) {
-              e.preventDefault();
-              scrollTrackToCard(pageRibbonTrack, -1);
-            });
-            btnPageRibbonNext.addEventListener('click', function(e) {
-              e.preventDefault();
-              scrollTrackToCard(pageRibbonTrack, 1);
-            });
-            pageRibbonTrack.addEventListener('scroll', updateRibbonArrowStates, { passive: true });
-            window.addEventListener('resize', updateRibbonArrowStates);
-            setTimeout(updateRibbonArrowStates, 100);
-          }
         }
 
 
@@ -4081,6 +4127,7 @@ ${allCardsHtml}
           var cleanCat = currentActiveCategory.toLowerCase().trim();
           var q = (query || '').toLowerCase().trim();
           var groupKey = getCategoryGroup(currentActiveCategory);
+          var groupInfo = ribbonGroups[groupKey] || ribbonGroups.flowers;
 
           if (btnPageSearchClear) {
             btnPageSearchClear.style.display = q ? 'block' : 'none';
@@ -4165,32 +4212,28 @@ ${allCardsHtml}
           });
 
           var displayCatName = currentActiveCategory;
-          var desc = 'Свежие авторские и монобукеты, шляпные коробки, корзины, подарки и декор с доставкой по Горловке';
           if (cleanCat === 'all' || cleanCat === 'все товары' || cleanCat === 'весь каталог') {
             displayCatName = 'Весь каталог цветов и подарков';
-            desc = 'Все букеты, шары, подарки и декор магазина «Цветочный Рай» с быстрой доставкой по Горловке';
           } else if (isFlowersMaster) {
             displayCatName = 'Цветы и букеты';
-            desc = 'Свежие авторские и монобукеты, шляпные коробки и корзины с доставкой по Горловке';
-          } else if (cleanCat.indexOf('шар') !== -1) {
-            displayCatName = currentActiveCategory === 'Гелиевые шары' ? 'Гелиевые воздушные шары' : currentActiveCategory;
-            desc = 'Гелиевые шары, наборы, фонтаны и большие коробки с сюрпризом в Горловке';
-          } else if (cleanCat.indexOf('подарк') !== -1 || cleanCat.indexOf('игрушк') !== -1) {
-            displayCatName = currentActiveCategory === 'Подарки и декор' ? 'Подарки и мягкие игрушки' : currentActiveCategory;
-            desc = 'Мягкие игрушки, подарочные боксы, открытки и сувениры к праздникам в Горловке';
-          } else if (cleanCat.indexOf('декор') !== -1 || cleanCat.indexOf('мероприят') !== -1 || cleanCat.indexOf('арк') !== -1 || cleanCat.indexOf('президиум') !== -1 || cleanCat.indexOf('фотозон') !== -1) {
-            displayCatName = currentActiveCategory;
-            desc = 'Флористическое оформление свадебных арок, президиумов, банкетных залов и фотозон в Горловке';
           }
 
           if (pageCatalogTitle) pageCatalogTitle.textContent = displayCatName;
-          if (pageCatalogDesc) pageCatalogDesc.textContent = desc;
+          if (pageCatalogDesc) pageCatalogDesc.textContent = groupInfo.desc;
           if (pageCatalogCount) pageCatalogCount.textContent = visibleCount + ' ' + getPluralGoods(visibleCount);
 
           if (btnCrumbParent && crumbSep2 && breadcrumbCategory) {
-            btnCrumbParent.style.display = 'none';
-            crumbSep2.style.display = 'none';
-            breadcrumbCategory.textContent = displayCatName;
+            if (groupKey !== 'all' && currentActiveCategory !== groupInfo.title) {
+              btnCrumbParent.style.display = 'inline';
+              btnCrumbParent.textContent = groupInfo.title;
+              btnCrumbParent.setAttribute('data-parent-cat', groupInfo.items[0].cat);
+              crumbSep2.style.display = 'inline';
+              breadcrumbCategory.textContent = displayCatName;
+            } else {
+              btnCrumbParent.style.display = 'none';
+              crumbSep2.style.display = 'none';
+              breadcrumbCategory.textContent = displayCatName;
+            }
           }
 
           if (catalogEmptyState) catalogEmptyState.style.display = visibleCount === 0 ? 'block' : 'none';
