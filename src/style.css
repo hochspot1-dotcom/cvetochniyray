@@ -1491,6 +1491,8 @@ button:active,
   transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
   user-select: none;
   box-shadow: 0 2px 6px rgba(45, 106, 79, 0.05);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .ribbon-btn:hover {

@@ -2344,17 +2344,41 @@ ${allCardsHtml}
             .trim();
           if (!cleanVal) return;
 
-          // Yandex Maps Suggest & Geocode API (Authorized with user API key)
+          // Gorlovka bounding box: lat 48.20–48.42, lon 37.90–38.18
+          var GRL_LAT_MIN = 48.20, GRL_LAT_MAX = 48.42;
+          var GRL_LON_MIN = 37.90, GRL_LON_MAX = 38.18;
+
+          function isGorlovkaAddress(value) {
+            if (!value) return false;
+            var v = value.toLowerCase();
+            return v.indexOf('горловк') !== -1 || v.indexOf('gorlovka') !== -1;
+          }
+
+          // Yandex Maps Suggest & Geocode API (Authorized with user API key) — Gorlovka only
           if (typeof ymaps !== 'undefined' && ymaps.suggest) {
-            ymaps.suggest('Горловка, ' + cleanVal, { results: 8 }).then(function(items) {
+            ymaps.suggest('Горловка, ' + cleanVal, {
+              results: 12,
+              strictBounds: true,
+              boundedBy: [[GRL_LAT_MIN, GRL_LON_MIN], [GRL_LAT_MAX, GRL_LON_MAX]]
+            }).then(function(items) {
               if (!items || items.length === 0) return;
-              var yList = items.map(function(it) {
-                var rawName = it.displayName || it.value || '';
-                var title = it.value ? it.value.replace(/г\\.?\\s*Горловка,?\\s*/gi, '').replace(/Горловка,?\\s*/gi, '').trim() : rawName;
-                var full = it.value || ('Горловка, ' + title);
+              var yList = [];
+              items.forEach(function(it) {
+                var rawValue = it.value || it.displayName || '';
+                // Only keep Gorlovka results
+                if (!isGorlovkaAddress(rawValue)) return;
+                var title = rawValue
+                  .replace(/г\.?\s*Горловка,?\s*/gi, '')
+                  .replace(/Горловка,?\s*/gi, '')
+                  .replace(/Донецкая Народная Республика[^,]*,\s*/gi, '')
+                  .replace(/ДНР[^,]*,\s*/gi, '')
+                  .replace(/Донецкая область[^,]*,\s*/gi, '')
+                  .trim();
+                if (!title) return;
+                var full = 'Горловка, ' + title;
                 var localZone = findLocalStreetMatches(title);
                 var zone = localZone.length > 0 ? localZone[0] : { dist: 'ЦГР', price: 250, time: '30 мин' };
-                return {
+                yList.push({
                   title: title,
                   full: full,
                   dist: zone.dist,
@@ -2362,7 +2386,7 @@ ${allCardsHtml}
                   time: zone.time,
                   coords: zone.coords,
                   meta: zone.dist + ' (' + zone.price + ' ₽, ' + zone.time + ')'
-                };
+                });
               });
 
               var combined = local.slice();
@@ -2381,17 +2405,32 @@ ${allCardsHtml}
               }
             }).catch(function() {});
           } else if (typeof ymaps !== 'undefined' && ymaps.geocode) {
-            ymaps.geocode('Горловка, ' + cleanVal, { results: 8 }).then(function(res) {
+            ymaps.geocode('Горловка, ' + cleanVal, {
+              results: 10,
+              boundedBy: [[GRL_LAT_MIN, GRL_LON_MIN], [GRL_LAT_MAX, GRL_LON_MAX]],
+              strictBounds: true
+            }).then(function(res) {
               if (!res || !res.geoObjects) return;
               var yList = [];
               res.geoObjects.each(function(obj) {
                 var coords = obj.geometry.getCoordinates();
+                var lat = coords[0], lon = coords[1];
+                // Only keep within Gorlovka bounding box
+                if (lat < GRL_LAT_MIN || lat > GRL_LAT_MAX || lon < GRL_LON_MIN || lon > GRL_LON_MAX) return;
                 var full = obj.getAddressLine() || '';
+                if (!isGorlovkaAddress(full)) return;
                 var title = obj.properties.get('name') || full;
+                title = title
+                  .replace(/г\.?\s*Горловка,?\s*/gi, '')
+                  .replace(/Горловка,?\s*/gi, '')
+                  .replace(/Донецкая Народная Республика[^,]*,\s*/gi, '')
+                  .replace(/ДНР[^,]*,\s*/gi, '')
+                  .trim();
+                if (!title) return;
                 var zone = getZoneForCoords(coords);
                 yList.push({
                   title: title,
-                  full: full,
+                  full: 'Горловка, ' + title,
                   dist: zone.dist,
                   price: zone.price,
                   time: zone.time,
@@ -3837,6 +3876,44 @@ ${allCardsHtml}
         }
 
         if (pageRibbonTrack) {
+          var _ribbonTouchStartX = 0;
+          var _ribbonTouchStartY = 0;
+          var _ribbonScrolled = false;
+          var _ribbonScrollStartLeft = 0;
+
+          pageRibbonTrack.addEventListener('touchstart', function(e) {
+            if (e.touches && e.touches[0]) {
+              _ribbonTouchStartX = e.touches[0].clientX;
+              _ribbonTouchStartY = e.touches[0].clientY;
+              _ribbonScrollStartLeft = pageRibbonTrack.scrollLeft;
+              _ribbonScrolled = false;
+            }
+          }, { passive: true });
+
+          pageRibbonTrack.addEventListener('touchmove', function(e) {
+            if (e.touches && e.touches[0]) {
+              var dx = Math.abs(e.touches[0].clientX - _ribbonTouchStartX);
+              var dy = Math.abs(e.touches[0].clientY - _ribbonTouchStartY);
+              if (dx > 6 || dy > 6) {
+                _ribbonScrolled = true;
+              }
+            }
+          }, { passive: true });
+
+          pageRibbonTrack.addEventListener('touchend', function(e) {
+            var scrollDelta = Math.abs(pageRibbonTrack.scrollLeft - _ribbonScrollStartLeft);
+            if (_ribbonScrolled && scrollDelta > 8) return;
+            var touch = e.changedTouches && e.changedTouches[0];
+            if (!touch) return;
+            var btn = document.elementFromPoint(touch.clientX, touch.clientY);
+            if (!btn) return;
+            var ribbonBtn = btn.closest('.ribbon-btn');
+            if (!ribbonBtn) return;
+            e.preventDefault();
+            var cat = ribbonBtn.getAttribute('data-cat') || 'all';
+            navigateToView('catalog', cat, pageSearchInput ? pageSearchInput.value : '');
+          }, { passive: false });
+
           pageRibbonTrack.addEventListener('click', function(e) {
             var btn = e.target.closest('.ribbon-btn');
             if (!btn) return;
